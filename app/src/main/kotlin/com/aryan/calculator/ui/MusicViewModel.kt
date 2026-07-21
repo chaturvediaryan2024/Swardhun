@@ -153,21 +153,30 @@ class MusicViewModel(
     }
 
     fun toggleDownload(song: Song) {
+        // If already downloading, ignore click
+        if (_downloadingIds.value.contains(song.id)) {
+            return
+        }
+
         viewModelScope.launch {
             val isDownloaded = repository.isDownloaded(song.id)
             if (isDownloaded) {
                 repository.removeDownload(song.id)
+                _downloadStatus.value = DownloadStatus(song.title, isComplete = true, isFailed = false)
+                delay(1500)
+                _downloadStatus.value = null
             } else {
                 _downloadingIds.value = _downloadingIds.value + song.id
                 _downloadStatus.value = DownloadStatus(song.title, isComplete = false)
                 try {
                     repository.download(song)
                     _downloadStatus.value = DownloadStatus(song.title, isComplete = true)
+                    delay(2000)
                 } catch (e: Exception) {
                     _downloadStatus.value = DownloadStatus(song.title, isComplete = false, isFailed = true)
+                    delay(2000)
                 } finally {
                     _downloadingIds.value = _downloadingIds.value - song.id
-                    delay(2500)
                     _downloadStatus.value = null
                 }
             }

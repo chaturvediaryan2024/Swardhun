@@ -188,7 +188,9 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
         return
     }
 
-    selectedSongForOptions?.let { song ->
+    // Song options sheet
+    if (selectedSongForOptions != null && songForPlaylist == null) {
+        val song = selectedSongForOptions!!
         SongOptionsSheet(
             song = song,
             isLiked = likedIds.contains(song.id),
@@ -203,11 +205,14 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             },
             onAddToPlaylist = {
                 songForPlaylist = song
+                selectedSongForOptions = null
             }
         )
     }
 
-    songForPlaylist?.let { song ->
+    // Add to playlist sheet
+    if (songForPlaylist != null) {
+        val song = songForPlaylist!!
         AddToPlaylistSheet(
             song = song,
             playlists = playlists,
@@ -218,6 +223,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             },
             onCreatePlaylistAndAdd = { name ->
                 viewModel.createPlaylistAndAddSong(name, song)
+                songForPlaylist = null
             }
         )
     }
@@ -294,13 +300,13 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                 )
             }
 
-            // Download status snackbar
+            // Download status snackbar - show at top
             downloadStatus?.let { status ->
                 DownloadSnackbar(
                     status = status,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp)
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp)
                 )
             }
         }
