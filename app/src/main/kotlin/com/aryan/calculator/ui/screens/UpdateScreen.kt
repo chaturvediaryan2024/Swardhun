@@ -103,39 +103,12 @@ fun UpdateScreen(update: AppUpdate) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "A new version of Swardhun is available.\nPlease update to continue using the app.",
+                text = "A new version is available with\nbug fixes and improvements.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
-
-            if (update.releaseNotes.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.05f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "What's New:",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = update.releaseNotes.take(300),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.height(40.dp))
 

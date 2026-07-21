@@ -4,23 +4,48 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- calculator body -->
-    <path android:fillColor="#E8E8ED"
-        android:pathData="M30,20 L78,20 A6,6 0 0 1 84,26 L84,82 A6,6 0 0 1 78,88 L30,88 A6,6 0 0 1 24,82 L24,26 A6,6 0 0 1 30,20 Z" />
-    <!-- screen -->
-    <path android:fillColor="#BF5AF2"
-        android:pathData="M31,28 L77,28 L77,42 L31,42 Z" />
-    <!-- button grid: 3 columns x 4 rows -->
-    <path android:fillColor="#07070C">
-        M31,48 L40,48 L40,55 L31,55 Z
-        M44,48 L53,48 L53,55 L44,55 Z
-        M57,48 L66,48 L66,55 L57,55 Z
-        M31,59 L40,59 L40,66 L31,66 Z
-        M44,59 L53,59 L53,66 L44,66 Z
-        M57,59 L66,59 L66,66 L57,66 Z
-        M31,70 L40,70 L40,77 L31,77 Z
-        M44,70 L53,70 L53,77 L44,77 Z
-        M57,70 L66,70 L66,77 L57,77 Z
-        M70,48 L77,48 L77,77 L70,77 Z
-    </path>
+
+    <!-- Person meditating with headphones -->
+    <!-- Head with headphones -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M54,30 A12,12 0 1 1 54,54 A12,12 0 1 1 54,30 Z"/>
+
+    <!-- Headphone band -->
+    <path android:fillColor="#B0C4DE"
+        android:strokeColor="#B0C4DE"
+        android:strokeWidth="3"
+        android:pathData="M38,42 Q38,25 54,25 Q70,25 70,42"/>
+
+    <!-- Left ear cup -->
+    <path android:fillColor="#B0C4DE"
+        android:pathData="M35,38 A5,6 0 1 1 35,50 A5,6 0 1 1 35,38 Z"/>
+
+    <!-- Right ear cup -->
+    <path android:fillColor="#B0C4DE"
+        android:pathData="M73,38 A5,6 0 1 1 73,50 A5,6 0 1 1 73,38 Z"/>
+
+    <!-- Body - meditation pose -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M54,55
+            Q45,60 40,72
+            Q38,78 42,82
+            L54,78
+            L66,82
+            Q70,78 68,72
+            Q63,60 54,55 Z"/>
+
+    <!-- Hands together -->
+    <path android:fillColor="#B0C4DE"
+        android:pathData="M48,68 Q54,72 60,68 Q54,75 48,68 Z"/>
+
+    <!-- Music note -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M72,28 L72,22 L78,20 L78,26 A3,3 0 1 1 72,28 Z"/>
+
+    <!-- Small stars -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M30,35 L31,38 L34,38 L32,40 L33,43 L30,41 L27,43 L28,40 L26,38 L29,38 Z"/>
+
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M78,55 L79,57 L81,57 L79.5,58.5 L80,61 L78,59.5 L76,61 L76.5,58.5 L75,57 L77,57 Z"/>
 </vector>
