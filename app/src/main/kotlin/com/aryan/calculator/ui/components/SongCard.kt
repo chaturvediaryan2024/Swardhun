@@ -139,16 +139,6 @@ fun SongCard(
                 )
             }
         }
-        if (onDownloadClick != null && !song.downloaded) {
-            IconButton(onClick = onDownloadClick) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowDownward,
-                    contentDescription = "Download",
-                    tint = AccentTeal,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
         IconButton(onClick = { onOptionsClick?.invoke() ?: onDownloadToggle() }) {
             Icon(
                 imageVector = Icons.Rounded.MoreHoriz,

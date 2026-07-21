@@ -175,17 +175,22 @@ object JioSaavnApi {
 
     suspend fun home(languages: Set<String> = setOf("hindi")): List<Song> = coroutineScope {
         val trendingQueries = listOf(
-            "trending hindi songs 2024",
-            "latest bollywood hits",
-            "arijit singh",
-            "top punjabi songs",
-            "new hindi songs"
+            "latest bollywood hits 2024",
+            "arijit singh new songs",
+            "top hindi songs 2024",
+            "trending punjabi songs 2024",
+            "new romantic hindi songs",
+            "bollywood party songs",
+            "atif aslam hits",
+            "jubin nautiyal songs",
+            "diljit dosanjh",
+            "ap dhillon"
         )
 
         val deferredList = trendingQueries.map { query ->
             async {
                 try {
-                    searchSongs(query, 15)
+                    searchSongs(query, 10)
                 } catch (e: Exception) {
                     emptyList<Song>()
                 }
@@ -197,9 +202,9 @@ object JioSaavnApi {
         val seen = HashSet<String>()
         val merged = ArrayList<Song>()
         for (song in allSongs) {
-            if (seen.add(song.id)) merged.add(song)
+            if (song.duration >= 120 && seen.add(song.id)) merged.add(song)
         }
-        merged.take(50)
+        merged.take(60)
     }
 
     private suspend fun getCharts(language: String): List<Song> {

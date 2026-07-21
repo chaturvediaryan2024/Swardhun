@@ -8,12 +8,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
@@ -118,6 +130,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val playbackState by viewModel.playbackState.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
     val toastMessage by viewModel.toastMessage.collectAsState()
+    val downloadingIds by viewModel.downloadingIds.collectAsState()
 
     val context = LocalContext.current
 
@@ -127,6 +140,8 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             viewModel.clearToast()
         }
     }
+
+    val isDownloading = downloadingIds.isNotEmpty()
 
     val currentSong = playbackState.currentSong
     val isCurrentLiked = viewModel.isCurrentSongLiked()
@@ -247,6 +262,39 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                     onPhotoChange = { viewModel.setUserPhoto(it) }
                 )
             }
+
+            // Download indicator
+            if (isDownloading) {
+                DownloadingIndicator(
+                    count = downloadingIds.size,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun DownloadingIndicator(count: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF1DB954).copy(alpha = 0.9f))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(14.dp),
+            color = Color.White,
+            strokeWidth = 2.dp
+        )
+        Text(
+            text = if (count == 1) "Downloading..." else "Downloading $count songs...",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
