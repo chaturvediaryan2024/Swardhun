@@ -215,7 +215,9 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                     onDownloadToggle = { selectedSongForOptions = it },
                     currentPlayingSongId = currentSong?.id,
                     recentlyPlayed = recentlyPlayed,
-                    onDownloadClick = { viewModel.toggleDownload(it) }
+                    onDownloadClick = { viewModel.toggleDownload(it) },
+                    userPhotoUri = userProfile.photoUri,
+                    onProfileClick = { selectedTab = NavTab.PROFILE }
                 )
                 NavTab.SEARCH -> SearchScreen(
                     query = searchQuery,
@@ -241,8 +243,6 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                 )
                 NavTab.PROFILE -> ProfileScreen(
                     profile = userProfile,
-                    downloadedCount = downloads.size,
-                    likedCount = likedSongs.size,
                     onNameChange = { viewModel.setUserName(it) },
                     onPhotoChange = { viewModel.setUserPhoto(it) }
                 )

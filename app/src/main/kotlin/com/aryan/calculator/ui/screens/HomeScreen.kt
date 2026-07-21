@@ -57,7 +57,9 @@ fun HomeScreen(
     onDownloadToggle: (Song) -> Unit,
     currentPlayingSongId: String? = null,
     recentlyPlayed: List<Song> = emptyList(),
-    onDownloadClick: (Song) -> Unit = {}
+    onDownloadClick: (Song) -> Unit = {},
+    userPhotoUri: String = "",
+    onProfileClick: () -> Unit = {}
 ) {
     val greeting = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
         in 5..11 -> "Good Morning"
@@ -91,8 +93,9 @@ fun HomeScreen(
             }
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
+                    .clickable { onProfileClick() }
                     .background(
                         Brush.linearGradient(
                             colors = listOf(GradientPink, GradientPurple)
@@ -100,12 +103,23 @@ fun HomeScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Rounded.Person,
-                    contentDescription = "Profile",
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
+                if (userPhotoUri.isNotEmpty()) {
+                    AsyncImage(
+                        model = userPhotoUri,
+                        contentDescription = "Profile",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.Person,
+                        contentDescription = "Profile",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 

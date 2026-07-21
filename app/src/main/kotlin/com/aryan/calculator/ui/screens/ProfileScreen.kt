@@ -29,7 +29,6 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -70,8 +69,6 @@ import com.aryan.calculator.ui.theme.GradientPurple
 @Composable
 fun ProfileScreen(
     profile: UserProfile,
-    downloadedCount: Int,
-    likedCount: Int,
     onNameChange: (String) -> Unit,
     onPhotoChange: (String) -> Unit
 ) {
@@ -79,7 +76,6 @@ fun ProfileScreen(
     var tempName by remember { mutableStateOf(profile.name) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
-    var showStorageDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -202,18 +198,6 @@ fun ProfileScreen(
             }
         }
 
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatCard(count = likedCount, label = "Liked")
-                StatCard(count = downloadedCount, label = "Downloaded")
-            }
-        }
-
         availableUpdate?.let { update ->
             item {
                 Card(
@@ -277,15 +261,6 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color.White,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-            )
-        }
-
-        item {
-            SettingsItem(
-                icon = Icons.Rounded.Storage,
-                title = "Storage",
-                subtitle = "$downloadedCount songs downloaded",
-                onClick = { showStorageDialog = true }
             )
         }
 
@@ -415,62 +390,6 @@ fun ProfileScreen(
         )
     }
 
-    if (showStorageDialog) {
-        AlertDialog(
-            onDismissRequest = { showStorageDialog = false },
-            containerColor = GlassBg,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Rounded.Storage,
-                        contentDescription = null,
-                        tint = AccentPink,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Storage", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Downloaded Songs",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "$downloadedCount songs saved for offline playback",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Liked Songs",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "$likedCount songs in your favorites",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showStorageDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
-                ) {
-                    Text("OK")
-                }
-            }
-        )
-    }
-
     if (showAboutDialog) {
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
@@ -529,28 +448,6 @@ fun ProfileScreen(
                     Text("OK")
                 }
             }
-        )
-    }
-}
-
-@Composable
-private fun StatCard(count: Int, label: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(GlassBg.copy(alpha = 0.5f))
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = AccentPink
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.6f)
         )
     }
 }
