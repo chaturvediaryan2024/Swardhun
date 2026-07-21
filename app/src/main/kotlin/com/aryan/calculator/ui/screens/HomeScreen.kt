@@ -21,7 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -148,28 +150,28 @@ fun HomeScreen(
                 }
 
                 item {
-                    SectionHeader("Trending Now")
+                    SectionHeader("🔥 Top 20 Trending")
                 }
 
-                items(songs.take(6), key = { "trending_${it.id}" }) { song ->
-                    SongCard(
+                items(songs.take(20), key = { "trending_${it.id}" }) { song ->
+                    val index = songs.indexOf(song) + 1
+                    SongCardWithRank(
+                        rank = index,
                         song = song,
                         onClick = { onSongClick(song) },
                         onDownloadToggle = { onDownloadToggle(song) },
                         isPlaying = song.id == currentPlayingSongId,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        onOptionsClick = { onDownloadToggle(song) },
                         onDownloadClick = { onDownloadClick(song) }
                     )
                 }
 
-                if (songs.size > 6) {
+                if (songs.size > 20) {
                     item {
                         Spacer(modifier = Modifier.height(20.dp))
-                        SectionHeader("Explore More")
+                        SectionHeader("🎵 More Songs")
                     }
 
-                    items(songs.drop(6), key = { it.id }) { song ->
+                    items(songs.drop(20), key = { it.id }) { song ->
                         SongCard(
                             song = song,
                             onClick = { onSongClick(song) },
@@ -197,6 +199,87 @@ private fun SectionHeader(title: String) {
         color = Color.White,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
     )
+}
+
+@Composable
+private fun SongCardWithRank(
+    rank: Int,
+    song: Song,
+    onClick: () -> Unit,
+    onDownloadToggle: () -> Unit,
+    isPlaying: Boolean,
+    onDownloadClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = rank.toString().padStart(2, '0'),
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = if (rank <= 3) AccentPink else Color.White.copy(alpha = 0.4f),
+            modifier = Modifier.width(36.dp)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Box {
+            AsyncImage(
+                model = song.artwork,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(56.dp)
+                    .shadow(8.dp, RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+            if (isPlaying) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("▶", color = AccentPink, fontSize = 18.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = if (isPlaying) AccentPink else Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.5f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        IconButton(onClick = onDownloadClick) {
+            Icon(
+                Icons.Rounded.ArrowDownward,
+                contentDescription = "Download",
+                tint = AccentPink.copy(alpha = 0.7f),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
 }
 
 @Composable

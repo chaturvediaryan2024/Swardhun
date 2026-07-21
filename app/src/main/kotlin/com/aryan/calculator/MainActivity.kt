@@ -20,8 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.widget.Toast
 import com.aryan.calculator.data.model.Song
 import com.aryan.calculator.ui.MusicViewModel
 import com.aryan.calculator.ui.components.BottomNav
@@ -33,6 +36,7 @@ import com.aryan.calculator.ui.screens.HomeScreen
 import com.aryan.calculator.ui.screens.PlayerScreen
 import com.aryan.calculator.ui.screens.ProfileScreen
 import com.aryan.calculator.ui.screens.SearchScreen
+import com.aryan.calculator.ui.screens.SplashScreen
 import com.aryan.calculator.ui.theme.BgDark
 import com.aryan.calculator.ui.theme.CalculatorTheme
 
@@ -58,7 +62,7 @@ class MainActivity : ComponentActivity() {
                         .background(BgDark)
                 ) {
                     val viewModel: MusicViewModel = viewModel(
-                        factory = MusicViewModel.Factory(app.repository, app.playerController, app.userPreferences)
+                        factory = MusicViewModel.Factory(app.repository, app.playerController, app.userPreferences, app)
                     )
                     SwardhunApp(viewModel)
                 }
@@ -69,9 +73,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun SwardhunApp(viewModel: MusicViewModel) {
+    var showSplash by remember { mutableStateOf(true) }
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var showPlayer by remember { mutableStateOf(false) }
     var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
+
+    if (showSplash) {
+        SplashScreen(onSplashComplete = { showSplash = false })
+        return
+    }
 
     val home by viewModel.home.collectAsState()
     val isLoadingHome by viewModel.isLoadingHome.collectAsState()
@@ -84,6 +94,16 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
     val playbackState by viewModel.playbackState.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
+    val toastMessage by viewModel.toastMessage.collectAsState()
+
+    val context = LocalContext.current
+
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearToast()
+        }
+    }
 
     val currentSong = playbackState.currentSong
     val isCurrentLiked = viewModel.isCurrentSongLiked()

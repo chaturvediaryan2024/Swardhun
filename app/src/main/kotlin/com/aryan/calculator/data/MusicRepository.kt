@@ -46,6 +46,10 @@ class MusicRepository(
         }
     }
 
+    suspend fun download(song: Song): Song = downloadManager.download(song)
+
+    suspend fun removeDownload(id: String) = downloadManager.remove(id)
+
     suspend fun toggleLike(song: Song) {
         if (likedSongDao.isLiked(song.id)) {
             likedSongDao.deleteById(song.id)

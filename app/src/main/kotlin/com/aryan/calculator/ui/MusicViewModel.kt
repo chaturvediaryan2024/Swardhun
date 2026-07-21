@@ -18,12 +18,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import android.widget.Toast
+import android.content.Context
 
 class MusicViewModel(
     private val repository: MusicRepository,
     val playerController: PlayerController,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val appContext: Context
 ) : ViewModel() {
+
+    private val _downloadingIds = MutableStateFlow<Set<String>>(emptySet())
+    val downloadingIds: StateFlow<Set<String>> = _downloadingIds.asStateFlow()
+
+    private val _toastMessage = MutableStateFlow<String?>(null)
+    val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
+
+    fun clearToast() {
+        _toastMessage.value = null
+    }
 
     private val _home = MutableStateFlow<List<Song>>(emptyList())
     val home: StateFlow<List<Song>> = _home.asStateFlow()
@@ -135,7 +148,22 @@ class MusicViewModel(
 
     fun toggleDownload(song: Song) {
         viewModelScope.launch {
-            repository.toggleDownload(song)
+            val isDownloaded = repository.isDownloaded(song.id)
+            if (isDownloaded) {
+                repository.removeDownload(song.id)
+                _toastMessage.value = "Removed from downloads"
+            } else {
+                _downloadingIds.value = _downloadingIds.value + song.id
+                _toastMessage.value = "Downloading ${song.title}..."
+                try {
+                    repository.download(song)
+                    _toastMessage.value = "${song.title} downloaded!"
+                } catch (e: Exception) {
+                    _toastMessage.value = "Download failed: ${e.message}"
+                } finally {
+                    _downloadingIds.value = _downloadingIds.value - song.id
+                }
+            }
             val flipped = !song.downloaded
             _home.value = _home.value.map { if (it.id == song.id) it.copy(downloaded = flipped) else it }
             _searchResults.value = _searchResults.value.map { if (it.id == song.id) it.copy(downloaded = flipped) else it }
@@ -159,11 +187,12 @@ class MusicViewModel(
     class Factory(
         private val repository: MusicRepository,
         private val playerController: PlayerController,
-        private val userPreferences: UserPreferences
+        private val userPreferences: UserPreferences,
+        private val appContext: Context
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return MusicViewModel(repository, playerController, userPreferences) as T
+            return MusicViewModel(repository, playerController, userPreferences, appContext) as T
         }
     }
 }

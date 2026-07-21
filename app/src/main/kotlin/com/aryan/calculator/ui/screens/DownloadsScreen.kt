@@ -177,7 +177,8 @@ fun DownloadsScreen(
                         onClick = { onSongClick(song) },
                         onDownloadToggle = { onDownloadToggle(song) },
                         isPlaying = song.id == currentPlayingSongId,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        onOptionsClick = { onDownloadToggle(song) }
                     )
                 }
             }

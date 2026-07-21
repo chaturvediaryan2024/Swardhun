@@ -79,6 +79,8 @@ fun ProfileScreen(
     var tempName by remember { mutableStateOf(profile.name) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var showStorageDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -283,7 +285,7 @@ fun ProfileScreen(
                 icon = Icons.Rounded.Storage,
                 title = "Storage",
                 subtitle = "$downloadedCount songs downloaded",
-                onClick = { }
+                onClick = { showStorageDialog = true }
             )
         }
 
@@ -292,7 +294,12 @@ fun ProfileScreen(
                 icon = Icons.Rounded.Notifications,
                 title = "Notifications",
                 subtitle = "Manage notifications",
-                onClick = { }
+                onClick = {
+                    android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        context.startActivity(this)
+                    }
+                }
             )
         }
 
@@ -301,7 +308,7 @@ fun ProfileScreen(
                 icon = Icons.Rounded.Info,
                 title = "About Swardhun",
                 subtitle = "Version 3.0",
-                onClick = { }
+                onClick = { showAboutDialog = true }
             )
         }
     }
@@ -403,6 +410,123 @@ fun ProfileScreen(
             dismissButton = {
                 TextButton(onClick = { showUpdateDialog = false }) {
                     Text("Later", color = Color.White.copy(alpha = 0.7f))
+                }
+            }
+        )
+    }
+
+    if (showStorageDialog) {
+        AlertDialog(
+            onDismissRequest = { showStorageDialog = false },
+            containerColor = GlassBg,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Rounded.Storage,
+                        contentDescription = null,
+                        tint = AccentPink,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Storage", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Downloaded Songs",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$downloadedCount songs saved for offline playback",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Liked Songs",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$likedCount songs in your favorites",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showStorageDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            containerColor = GlassBg,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Rounded.Info,
+                        contentDescription = null,
+                        tint = AccentPink,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("About Swardhun", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Swardhun",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = AccentPink,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Version 3.0",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "A beautiful music streaming app",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = "made by 💕",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "★Aαru ☯️",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = AccentPink,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showAboutDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
+                ) {
+                    Text("OK")
                 }
             }
         )

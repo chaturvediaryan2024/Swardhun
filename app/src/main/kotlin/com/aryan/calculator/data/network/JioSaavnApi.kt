@@ -174,43 +174,32 @@ object JioSaavnApi {
     }
 
     suspend fun home(languages: Set<String> = setOf("hindi")): List<Song> = coroutineScope {
-        val langParam = languages.joinToString(",")
-        val trendingUrl = "$BASE?__call=content.getTrending&entity_type=song&entity_language=$langParam$COMMON"
+        val trendingQueries = listOf(
+            "trending hindi songs 2024",
+            "latest bollywood hits",
+            "arijit singh",
+            "top punjabi songs",
+            "new hindi songs"
+        )
 
-        val fromTrending = try {
-            val text = getText(trendingUrl).trim()
-            val list = if (text.startsWith("[")) {
-                JSONArray(text)
-            } else {
-                val json = JSONObject(text)
-                json.optJSONArray("data") ?: json.optJSONArray("results") ?: JSONArray()
-            }
-            (0 until list.length()).mapNotNull { mapSong(list.optJSONObject(it) ?: JSONObject()) }
-        } catch (e: Exception) {
-            emptyList()
-        }
-
-        if (fromTrending.size >= 20) {
-            return@coroutineScope fromTrending
-        }
-
-        val deferredList = languages.take(3).map { lang ->
+        val deferredList = trendingQueries.map { query ->
             async {
                 try {
-                    getCharts(lang).take(15)
+                    searchSongs(query, 15)
                 } catch (e: Exception) {
                     emptyList<Song>()
                 }
             }
         }
-        val additionalSongs = deferredList.flatMap { it.await() }
+
+        val allSongs = deferredList.flatMap { it.await() }
 
         val seen = HashSet<String>()
         val merged = ArrayList<Song>()
-        for (song in (fromTrending + additionalSongs)) {
+        for (song in allSongs) {
             if (seen.add(song.id)) merged.add(song)
         }
-        merged.take(60)
+        merged.take(50)
     }
 
     private suspend fun getCharts(language: String): List<Song> {
