@@ -151,15 +151,12 @@ class MusicViewModel(
             val isDownloaded = repository.isDownloaded(song.id)
             if (isDownloaded) {
                 repository.removeDownload(song.id)
-                _toastMessage.value = "Removed from downloads"
             } else {
                 _downloadingIds.value = _downloadingIds.value + song.id
-                _toastMessage.value = "Downloading ${song.title}..."
                 try {
                     repository.download(song)
-                    _toastMessage.value = "${song.title} downloaded!"
                 } catch (e: Exception) {
-                    _toastMessage.value = "Download failed: ${e.message}"
+                    // Silent fail
                 } finally {
                     _downloadingIds.value = _downloadingIds.value - song.id
                 }

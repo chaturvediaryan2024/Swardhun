@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudDownload
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Shuffle
@@ -34,8 +35,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.IconButton
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import com.aryan.calculator.data.model.Song
-import com.aryan.calculator.ui.components.SongCard
 import com.aryan.calculator.ui.theme.AccentPink
 import com.aryan.calculator.ui.theme.AccentTeal
 import com.aryan.calculator.ui.theme.GradientPink
@@ -45,7 +50,7 @@ import com.aryan.calculator.ui.theme.GradientPurple
 fun DownloadsScreen(
     songs: List<Song>,
     onSongClick: (Song) -> Unit,
-    onDownloadToggle: (Song) -> Unit,
+    onDeleteSong: (Song) -> Unit,
     onPlayAll: () -> Unit = {},
     onShufflePlay: () -> Unit = {},
     currentPlayingSongId: String? = null
@@ -172,16 +177,81 @@ fun DownloadsScreen(
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 items(songs, key = { it.id }) { song ->
-                    SongCard(
+                    DownloadedSongCard(
                         song = song,
                         onClick = { onSongClick(song) },
-                        onDownloadToggle = { onDownloadToggle(song) },
-                        isPlaying = song.id == currentPlayingSongId,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        onOptionsClick = { onDownloadToggle(song) }
+                        onDelete = { onDeleteSong(song) },
+                        isPlaying = song.id == currentPlayingSongId
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DownloadedSongCard(
+    song: Song,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    isPlaying: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box {
+            AsyncImage(
+                model = song.artwork,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+            if (isPlaying) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("▶", color = AccentTeal, fontSize = 18.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = if (isPlaying) AccentTeal else Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.5f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        IconButton(onClick = onDelete) {
+            Icon(
+                Icons.Rounded.Delete,
+                contentDescription = "Delete",
+                tint = Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 }

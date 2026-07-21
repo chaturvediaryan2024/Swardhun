@@ -21,9 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -173,9 +171,7 @@ fun HomeScreen(
                         rank = index,
                         song = song,
                         onClick = { onSongClick(song) },
-                        onDownloadToggle = { onDownloadToggle(song) },
-                        isPlaying = song.id == currentPlayingSongId,
-                        onDownloadClick = { onDownloadClick(song) }
+                        isPlaying = song.id == currentPlayingSongId
                     )
                 }
 
@@ -220,9 +216,7 @@ private fun SongCardWithRank(
     rank: Int,
     song: Song,
     onClick: () -> Unit,
-    onDownloadToggle: () -> Unit,
-    isPlaying: Boolean,
-    onDownloadClick: () -> Unit
+    isPlaying: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -282,15 +276,6 @@ private fun SongCardWithRank(
                 color = Color.White.copy(alpha = 0.5f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        IconButton(onClick = onDownloadClick) {
-            Icon(
-                Icons.Rounded.ArrowDownward,
-                contentDescription = "Download",
-                tint = AccentPink.copy(alpha = 0.7f),
-                modifier = Modifier.size(22.dp)
             )
         }
     }

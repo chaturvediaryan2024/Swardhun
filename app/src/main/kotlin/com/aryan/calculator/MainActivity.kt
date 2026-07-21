@@ -232,7 +232,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                 NavTab.LIBRARY -> DownloadsScreen(
                     songs = downloads,
                     onSongClick = { viewModel.playFrom(downloads, it) },
-                    onDownloadToggle = { selectedSongForOptions = it },
+                    onDeleteSong = { viewModel.toggleDownload(it) },
                     onPlayAll = { if (downloads.isNotEmpty()) viewModel.playFrom(downloads, downloads.first()) },
                     onShufflePlay = {
                         if (downloads.isNotEmpty()) {
