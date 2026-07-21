@@ -216,8 +216,11 @@ class MusicViewModel(
 
     fun createPlaylistAndAddSong(name: String, song: Song) {
         viewModelScope.launch {
+            android.util.Log.d("Musify", "Creating playlist $name and adding ${song.title}")
             val playlistId = repository.createPlaylist(name)
             repository.addSongToPlaylist(playlistId, song)
+            android.util.Log.d("Musify", "Playlist created with id $playlistId, song added")
+            _toastMessage.value = "Playlist created & song added"
         }
     }
 
@@ -229,7 +232,10 @@ class MusicViewModel(
 
     fun addSongToPlaylist(playlistId: Long, song: Song) {
         viewModelScope.launch {
+            android.util.Log.d("Musify", "Adding song ${song.title} to playlist $playlistId")
             repository.addSongToPlaylist(playlistId, song)
+            android.util.Log.d("Musify", "Song added successfully")
+            _toastMessage.value = "Added to playlist"
         }
     }
 
