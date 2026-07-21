@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Calculator" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#07070C</item>
+        <item name="android:navigationBarColor">#07070C</item>
+        <item name="android:windowBackground">#07070C</item>
+    </style>
+</resources>
