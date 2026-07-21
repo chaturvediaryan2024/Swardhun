@@ -281,8 +281,8 @@ fun ProfileScreen(
         item {
             SettingsItem(
                 icon = Icons.Rounded.Info,
-                title = "About Swardhun",
-                subtitle = "Version 3.0",
+                title = "About Musify",
+                subtitle = "Version 3.8",
                 onClick = { showAboutDialog = true }
             )
         }
@@ -403,20 +403,20 @@ fun ProfileScreen(
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("About Swardhun", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("About Musify", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Swardhun",
+                        text = "Musify",
                         style = MaterialTheme.typography.headlineSmall,
                         color = AccentPink,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Version 3.0",
+                        text = "Version 3.8",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.7f)
                     )

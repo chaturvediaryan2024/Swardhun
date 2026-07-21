@@ -79,7 +79,7 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
         ) {
             // App Name
             Text(
-                text = "Swardhun",
+                text = "Musify",
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-2).sp
@@ -134,7 +134,7 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
 
         // Bottom version
         Text(
-            text = "v3.0",
+            text = "v3.8",
             style = MaterialTheme.typography.bodySmall,
             color = Color.White.copy(alpha = 0.3f),
             modifier = Modifier

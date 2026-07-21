@@ -5,47 +5,90 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Person meditating with headphones -->
-    <!-- Head with headphones -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M54,30 A12,12 0 1 1 54,54 A12,12 0 1 1 54,30 Z"/>
+    <!-- Head circle -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M54,28
+            A10,10 0 1 1 54,48
+            A10,10 0 1 1 54,28 Z"/>
 
     <!-- Headphone band -->
-    <path android:fillColor="#B0C4DE"
-        android:strokeColor="#B0C4DE"
-        android:strokeWidth="3"
-        android:pathData="M38,42 Q38,25 54,25 Q70,25 70,42"/>
+    <path
+        android:fillColor="#B8D4E8"
+        android:pathData="M40,38
+            C40,28 48,22 54,22
+            C60,22 68,28 68,38
+            L65,38
+            C65,30 60,25 54,25
+            C48,25 43,30 43,38
+            Z"/>
 
     <!-- Left ear cup -->
-    <path android:fillColor="#B0C4DE"
-        android:pathData="M35,38 A5,6 0 1 1 35,50 A5,6 0 1 1 35,38 Z"/>
+    <path
+        android:fillColor="#B8D4E8"
+        android:pathData="M38,34
+            A4,5 0 1 0 38,44
+            A4,5 0 1 0 38,34 Z"/>
 
     <!-- Right ear cup -->
-    <path android:fillColor="#B0C4DE"
-        android:pathData="M73,38 A5,6 0 1 1 73,50 A5,6 0 1 1 73,38 Z"/>
+    <path
+        android:fillColor="#B8D4E8"
+        android:pathData="M70,34
+            A4,5 0 1 0 70,44
+            A4,5 0 1 0 70,34 Z"/>
 
-    <!-- Body - meditation pose -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M54,55
-            Q45,60 40,72
-            Q38,78 42,82
-            L54,78
-            L66,82
-            Q70,78 68,72
-            Q63,60 54,55 Z"/>
+    <!-- Body meditation pose -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M54,50
+            C46,52 42,58 40,66
+            C38,72 40,78 44,80
+            L54,76
+            L64,80
+            C68,78 70,72 68,66
+            C66,58 62,52 54,50
+            Z"/>
 
-    <!-- Hands together -->
-    <path android:fillColor="#B0C4DE"
-        android:pathData="M48,68 Q54,72 60,68 Q54,75 48,68 Z"/>
+    <!-- Hands together in meditation -->
+    <path
+        android:fillColor="#B8D4E8"
+        android:pathData="M48,65
+            Q54,70 60,65
+            Q54,72 48,65
+            Z"/>
 
-    <!-- Music note -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M72,28 L72,22 L78,20 L78,26 A3,3 0 1 1 72,28 Z"/>
+    <!-- Music note top right -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M75,20 L75,30
+            A3,3 0 1 1 72,33
+            A3,3 0 1 1 75,30
+            L75,22 L80,20 L80,28
+            A3,3 0 1 1 77,31
+            A3,3 0 1 1 80,28
+            Z"/>
 
-    <!-- Small stars -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M30,35 L31,38 L34,38 L32,40 L33,43 L30,41 L27,43 L28,40 L26,38 L29,38 Z"/>
+    <!-- Star left -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M28,32 L29,35 L32,35 L30,37 L31,40 L28,38 L25,40 L26,37 L24,35 L27,35 Z"/>
 
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M78,55 L79,57 L81,57 L79.5,58.5 L80,61 L78,59.5 L76,61 L76.5,58.5 L75,57 L77,57 Z"/>
+    <!-- Star right -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M80,52 L81,54 L83,54 L81.5,55.5 L82,58 L80,56.5 L78,58 L78.5,55.5 L77,54 L79,54 Z"/>
+
+    <!-- Small dot decorations -->
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M32,45 A1.5,1.5 0 1 1 32,48 A1.5,1.5 0 1 1 32,45 Z"/>
+
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M26,50 A1,1 0 1 1 26,52 A1,1 0 1 1 26,50 Z"/>
+
+    <path
+        android:fillColor="#E8F4FC"
+        android:pathData="M76,42 A1.5,1.5 0 1 1 76,45 A1.5,1.5 0 1 1 76,42 Z"/>
+
 </vector>

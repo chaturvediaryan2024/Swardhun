@@ -81,7 +81,7 @@ fun HomeScreen(
                     color = Color.White.copy(alpha = 0.6f)
                 )
                 Text(
-                    text = "Swardhun",
+                    text = "Musify",
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-1).sp

@@ -54,10 +54,10 @@ object UpdateNotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("🎵 Swardhun Update Available!")
+            .setContentTitle("🎵 Musify Update Available!")
             .setContentText("Version ${update.versionName} is ready to download")
             .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("A new version of Swardhun (v${update.versionName}) is available. Tap to download and enjoy new features!"))
+                .bigText("A new version of Musify (v${update.versionName}) is available. Tap to download and enjoy new features!"))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

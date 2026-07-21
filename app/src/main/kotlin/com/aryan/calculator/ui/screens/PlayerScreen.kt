@@ -190,7 +190,7 @@ fun PlayerScreen(
                         letterSpacing = 1.sp
                     )
                     Text(
-                        text = song?.album?.takeIf { it.isNotBlank() } ?: "Swardhun",
+                        text = song?.album?.takeIf { it.isNotBlank() } ?: "Musify",
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White.copy(alpha = 0.8f),
                         fontWeight = FontWeight.SemiBold

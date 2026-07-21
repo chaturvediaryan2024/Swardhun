@@ -157,7 +157,7 @@ fun SongOptionsSheet(
                 onClick = {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, "Listen to ${song.title} by ${song.artist} on Swardhun!")
+                        putExtra(Intent.EXTRA_TEXT, "Listen to ${song.title} by ${song.artist} on Musify!")
                     }
                     context.startActivity(Intent.createChooser(shareIntent, "Share via"))
                     onDismiss()
