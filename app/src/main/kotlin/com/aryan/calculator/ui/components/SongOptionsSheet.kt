@@ -57,7 +57,8 @@ fun SongOptionsSheet(
     onLike: () -> Unit,
     onAddToQueue: () -> Unit,
     onShare: () -> Unit,
-    onViewArtist: () -> Unit
+    onViewArtist: () -> Unit,
+    onAddToPlaylist: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
@@ -147,6 +148,15 @@ fun SongOptionsSheet(
                 label = "Add to Queue",
                 onClick = {
                     onAddToQueue()
+                    onDismiss()
+                }
+            )
+
+            OptionItem(
+                icon = Icons.Rounded.PlaylistAdd,
+                label = "Add to Playlist",
+                onClick = {
+                    onAddToPlaylist()
                     onDismiss()
                 }
             )

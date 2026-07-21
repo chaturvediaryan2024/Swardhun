@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.aryan.calculator.data.MusicRepository
+import com.aryan.calculator.data.local.PlaylistWithSongCount
 import com.aryan.calculator.data.local.UserPreferences
 import com.aryan.calculator.data.local.UserProfile
 import com.aryan.calculator.data.model.Song
@@ -18,8 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import android.widget.Toast
 import android.content.Context
+import com.aryan.calculator.data.DownloadNotificationHelper
 
 class MusicViewModel(
     private val repository: MusicRepository,
@@ -153,10 +154,12 @@ class MusicViewModel(
                 repository.removeDownload(song.id)
             } else {
                 _downloadingIds.value = _downloadingIds.value + song.id
+                DownloadNotificationHelper.showDownloadStarted(appContext, song.title)
                 try {
                     repository.download(song)
+                    DownloadNotificationHelper.showDownloadComplete(appContext, song.title)
                 } catch (e: Exception) {
-                    // Silent fail
+                    DownloadNotificationHelper.showDownloadFailed(appContext, song.title)
                 } finally {
                     _downloadingIds.value = _downloadingIds.value - song.id
                 }
@@ -180,6 +183,37 @@ class MusicViewModel(
         val currentId = playbackState.value.currentSong?.id ?: return false
         return likedIds.value.contains(currentId)
     }
+
+    // Playlist functions
+    val playlists = repository.observePlaylists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun createPlaylist(name: String) {
+        viewModelScope.launch {
+            repository.createPlaylist(name)
+        }
+    }
+
+    fun deletePlaylist(id: Long) {
+        viewModelScope.launch {
+            repository.deletePlaylist(id)
+        }
+    }
+
+    fun addSongToPlaylist(playlistId: Long, song: Song) {
+        viewModelScope.launch {
+            repository.addSongToPlaylist(playlistId, song)
+        }
+    }
+
+    fun removeSongFromPlaylist(playlistId: Long, songId: String) {
+        viewModelScope.launch {
+            repository.removeSongFromPlaylist(playlistId, songId)
+        }
+    }
+
+    fun getPlaylistSongs(playlistId: Long) = repository.observePlaylistSongs(playlistId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     class Factory(
         private val repository: MusicRepository,

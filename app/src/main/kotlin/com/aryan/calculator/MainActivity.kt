@@ -44,7 +44,8 @@ import com.aryan.calculator.ui.components.BottomNav
 import com.aryan.calculator.ui.components.MiniPlayer
 import com.aryan.calculator.ui.components.NavTab
 import com.aryan.calculator.ui.components.SongOptionsSheet
-import com.aryan.calculator.ui.screens.DownloadsScreen
+import com.aryan.calculator.ui.components.AddToPlaylistSheet
+import com.aryan.calculator.ui.screens.LibraryScreen
 import com.aryan.calculator.ui.screens.HomeScreen
 import com.aryan.calculator.ui.screens.PlayerScreen
 import com.aryan.calculator.ui.screens.ProfileScreen
@@ -93,6 +94,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var showPlayer by remember { mutableStateOf(false) }
     var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
+    var songForPlaylist by remember { mutableStateOf<Song?>(null) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var checkingUpdate by remember { mutableStateOf(true) }
 
@@ -131,6 +133,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val userProfile by viewModel.userProfile.collectAsState()
     val toastMessage by viewModel.toastMessage.collectAsState()
     val downloadingIds by viewModel.downloadingIds.collectAsState()
+    val playlists by viewModel.playlists.collectAsState()
 
     val context = LocalContext.current
 
@@ -191,6 +194,23 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             onViewArtist = {
                 viewModel.searchArtist(song.artist.split(",").first().trim())
                 selectedTab = NavTab.SEARCH
+            },
+            onAddToPlaylist = {
+                songForPlaylist = song
+            }
+        )
+    }
+
+    songForPlaylist?.let { song ->
+        AddToPlaylistSheet(
+            song = song,
+            playlists = playlists,
+            onDismiss = { songForPlaylist = null },
+            onAddToPlaylist = { playlistId ->
+                viewModel.addSongToPlaylist(playlistId, song)
+            },
+            onCreatePlaylist = { name ->
+                viewModel.createPlaylist(name)
             }
         )
     }
@@ -244,8 +264,9 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                     currentPlayingSongId = currentSong?.id,
                     onDownloadClick = { viewModel.toggleDownload(it) }
                 )
-                NavTab.LIBRARY -> DownloadsScreen(
-                    songs = downloads,
+                NavTab.LIBRARY -> LibraryScreen(
+                    downloads = downloads,
+                    playlists = playlists,
                     onSongClick = { viewModel.playFrom(downloads, it) },
                     onDeleteSong = { viewModel.toggleDownload(it) },
                     onPlayAll = { if (downloads.isNotEmpty()) viewModel.playFrom(downloads, downloads.first()) },
@@ -254,7 +275,10 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                             viewModel.playerController.playQueue(downloads, 0, shuffle = true)
                         }
                     },
-                    currentPlayingSongId = currentSong?.id
+                    currentPlayingSongId = currentSong?.id,
+                    onCreatePlaylist = { viewModel.createPlaylist(it) },
+                    onPlaylistClick = { /* TODO: Open playlist detail */ },
+                    onDeletePlaylist = { viewModel.deletePlaylist(it) }
                 )
                 NavTab.PROFILE -> ProfileScreen(
                     profile = userProfile,

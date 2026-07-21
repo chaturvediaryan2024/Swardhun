@@ -3,6 +3,7 @@ package com.aryan.calculator
 import android.app.Application
 import com.aryan.calculator.data.DownloadManager
 import com.aryan.calculator.data.MusicRepository
+import com.aryan.calculator.data.DownloadNotificationHelper
 import com.aryan.calculator.data.UpdateNotificationHelper
 import com.aryan.calculator.data.local.AppDatabase
 import com.aryan.calculator.data.local.UserPreferences
@@ -30,13 +31,15 @@ class CalculatorApp : Application() {
         repository = MusicRepository(
             downloadManager = downloadManager,
             likedSongDao = db.likedSongDao(),
-            recentlyPlayedDao = db.recentlyPlayedDao()
+            recentlyPlayedDao = db.recentlyPlayedDao(),
+            playlistDao = db.playlistDao()
         )
         playerController = PlayerController(this)
         userPreferences = UserPreferences(this)
 
-        // Create notification channel and check for updates
+        // Create notification channels and check for updates
         UpdateNotificationHelper.createNotificationChannel(this)
+        DownloadNotificationHelper.createNotificationChannel(this)
         applicationScope.launch {
             UpdateNotificationHelper.checkAndNotify(this@CalculatorApp)
         }
