@@ -38,6 +38,9 @@ import com.aryan.calculator.ui.screens.PlayerScreen
 import com.aryan.calculator.ui.screens.ProfileScreen
 import com.aryan.calculator.ui.screens.SearchScreen
 import com.aryan.calculator.ui.screens.SplashScreen
+import com.aryan.calculator.ui.screens.UpdateScreen
+import com.aryan.calculator.data.AppUpdate
+import com.aryan.calculator.data.UpdateChecker
 import com.aryan.calculator.ui.theme.BgDark
 import com.aryan.calculator.ui.theme.CalculatorTheme
 
@@ -78,9 +81,28 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var showPlayer by remember { mutableStateOf(false) }
     var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
+    var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var checkingUpdate by remember { mutableStateOf(true) }
+
+    // Check for update on app start
+    LaunchedEffect(Unit) {
+        availableUpdate = UpdateChecker.checkForUpdate()
+        checkingUpdate = false
+    }
 
     if (showSplash) {
         SplashScreen(onSplashComplete = { showSplash = false })
+        return
+    }
+
+    // Show update screen if update available (forced update)
+    if (availableUpdate != null) {
+        UpdateScreen(update = availableUpdate!!)
+        return
+    }
+
+    // Show loading while checking for update
+    if (checkingUpdate) {
         return
     }
 
