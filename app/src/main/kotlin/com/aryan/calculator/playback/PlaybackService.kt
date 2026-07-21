@@ -20,10 +20,10 @@ class PlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = mediaSession?.player ?: return
-        if (!player.playWhenReady || player.mediaItemCount == 0) {
-            stopSelf()
-        }
+        val player = mediaSession?.player
+        player?.stop()
+        player?.clearMediaItems()
+        stopSelf()
     }
 
     override fun onDestroy() {

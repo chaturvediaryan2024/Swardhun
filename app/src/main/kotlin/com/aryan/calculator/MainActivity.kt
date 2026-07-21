@@ -23,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.BackHandler
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.widget.Toast
 import com.aryan.calculator.data.model.Song
@@ -108,6 +109,14 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val currentSong = playbackState.currentSong
     val isCurrentLiked = viewModel.isCurrentSongLiked()
 
+    // Back button handling
+    BackHandler(enabled = showPlayer || selectedTab != NavTab.HOME) {
+        when {
+            showPlayer -> showPlayer = false
+            selectedTab != NavTab.HOME -> selectedTab = NavTab.HOME
+        }
+    }
+
     if (showPlayer && currentSong != null) {
         PlayerScreen(
             state = playbackState,
@@ -120,7 +129,15 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             onShuffle = { viewModel.playerController.toggleShuffle() },
             onRepeat = { viewModel.playerController.cycleRepeatMode() },
             onLike = { currentSong.let { viewModel.toggleLike(it) } },
-            isLiked = isCurrentLiked
+            isLiked = isCurrentLiked,
+            onDownload = { viewModel.toggleDownload(currentSong) },
+            onAddToQueue = { viewModel.addToQueue(currentSong) },
+            onShare = { },
+            onViewArtist = {
+                viewModel.searchArtist(currentSong.artist.split(",").first().trim())
+                selectedTab = NavTab.SEARCH
+                showPlayer = false
+            }
         )
         return
     }

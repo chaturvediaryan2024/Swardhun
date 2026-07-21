@@ -26,7 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.QueueMusic
@@ -59,7 +59,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import coil.compose.AsyncImage
+import com.aryan.calculator.data.model.Song
+import com.aryan.calculator.ui.components.SongOptionsSheet
 import com.aryan.calculator.playback.PlaybackState
 import com.aryan.calculator.playback.RepeatMode
 import com.aryan.calculator.ui.theme.AccentPink
@@ -83,8 +88,13 @@ fun PlayerScreen(
     onRepeat: () -> Unit = {},
     onLike: () -> Unit = {},
     isLiked: Boolean = false,
-    onShowQueue: () -> Unit = {}
+    onShowQueue: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onAddToQueue: () -> Unit = {},
+    onShare: () -> Unit = {},
+    onViewArtist: () -> Unit = {}
 ) {
+    var showOptionsMenu by remember { mutableStateOf(false) }
     val song = state.currentSong
 
     LaunchedEffect(state.isPlaying) {
@@ -186,9 +196,9 @@ fun PlayerScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = { showOptionsMenu = true }) {
                     Icon(
-                        Icons.Rounded.MoreHoriz,
+                        Icons.Rounded.MoreVert,
                         contentDescription = "More",
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
@@ -366,7 +376,7 @@ fun PlayerScreen(
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = onShare) {
                     Icon(
                         Icons.Rounded.Share,
                         contentDescription = "Share",
@@ -384,6 +394,34 @@ fun PlayerScreen(
                 }
             }
         }
+    }
+
+    if (showOptionsMenu && song != null) {
+        SongOptionsSheet(
+            song = song,
+            isLiked = isLiked,
+            onDismiss = { showOptionsMenu = false },
+            onDownload = {
+                onDownload()
+                showOptionsMenu = false
+            },
+            onLike = {
+                onLike()
+                showOptionsMenu = false
+            },
+            onAddToQueue = {
+                onAddToQueue()
+                showOptionsMenu = false
+            },
+            onShare = {
+                onShare()
+                showOptionsMenu = false
+            },
+            onViewArtist = {
+                onViewArtist()
+                showOptionsMenu = false
+            }
+        )
     }
 }
 
