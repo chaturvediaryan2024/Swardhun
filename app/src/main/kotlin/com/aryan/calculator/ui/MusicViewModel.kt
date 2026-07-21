@@ -35,6 +35,11 @@ class MusicViewModel(
     private val _toastMessage = MutableStateFlow<String?>(null)
     val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
 
+    private val _downloadStatus = MutableStateFlow<DownloadStatus?>(null)
+    val downloadStatus: StateFlow<DownloadStatus?> = _downloadStatus.asStateFlow()
+
+    data class DownloadStatus(val songTitle: String, val isComplete: Boolean, val isFailed: Boolean = false)
+
     fun clearToast() {
         _toastMessage.value = null
     }
@@ -154,20 +159,26 @@ class MusicViewModel(
                 repository.removeDownload(song.id)
             } else {
                 _downloadingIds.value = _downloadingIds.value + song.id
-                DownloadNotificationHelper.showDownloadStarted(appContext, song.title)
+                _downloadStatus.value = DownloadStatus(song.title, isComplete = false)
                 try {
                     repository.download(song)
-                    DownloadNotificationHelper.showDownloadComplete(appContext, song.title)
+                    _downloadStatus.value = DownloadStatus(song.title, isComplete = true)
                 } catch (e: Exception) {
-                    DownloadNotificationHelper.showDownloadFailed(appContext, song.title)
+                    _downloadStatus.value = DownloadStatus(song.title, isComplete = false, isFailed = true)
                 } finally {
                     _downloadingIds.value = _downloadingIds.value - song.id
+                    delay(2500)
+                    _downloadStatus.value = null
                 }
             }
             val flipped = !song.downloaded
             _home.value = _home.value.map { if (it.id == song.id) it.copy(downloaded = flipped) else it }
             _searchResults.value = _searchResults.value.map { if (it.id == song.id) it.copy(downloaded = flipped) else it }
         }
+    }
+
+    fun clearDownloadStatus() {
+        _downloadStatus.value = null
     }
 
     fun toggleLike(song: Song) {

@@ -13,10 +13,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -134,6 +139,7 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val toastMessage by viewModel.toastMessage.collectAsState()
     val downloadingIds by viewModel.downloadingIds.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val downloadStatus by viewModel.downloadStatus.collectAsState()
 
     val context = LocalContext.current
 
@@ -288,11 +294,13 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                 )
             }
 
-            // Download indicator
-            if (isDownloading) {
-                DownloadingIndicator(
-                    count = downloadingIds.size,
-                    modifier = Modifier.align(Alignment.TopCenter)
+            // Download status snackbar
+            downloadStatus?.let { status ->
+                DownloadSnackbar(
+                    status = status,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 8.dp)
                 )
             }
         }
@@ -300,26 +308,65 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
 }
 
 @Composable
-private fun DownloadingIndicator(count: Int, modifier: Modifier = Modifier) {
+private fun DownloadSnackbar(
+    status: MusicViewModel.DownloadStatus,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = when {
+        status.isFailed -> Color(0xFFef4444)
+        status.isComplete -> Color(0xFF22c55e)
+        else -> Color(0xFF3b82f6)
+    }
+
+    val icon = when {
+        status.isFailed -> Icons.Rounded.Error
+        status.isComplete -> Icons.Rounded.CheckCircle
+        else -> null
+    }
+
+    val text = when {
+        status.isFailed -> "Download failed"
+        status.isComplete -> "Downloaded"
+        else -> "Downloading..."
+    }
+
     Row(
         modifier = modifier
-            .padding(top = 8.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF1DB954).copy(alpha = 0.9f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(14.dp),
-            color = Color.White,
-            strokeWidth = 2.dp
-        )
-        Text(
-            text = if (count == 1) "Downloading..." else "Downloading $count songs...",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White,
-            fontWeight = FontWeight.Medium
-        )
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        } else {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = status.songTitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.8f),
+                maxLines = 1
+            )
+        }
     }
 }

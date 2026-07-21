@@ -67,11 +67,13 @@ import com.aryan.calculator.data.model.Song
 import com.aryan.calculator.ui.components.SongOptionsSheet
 import com.aryan.calculator.playback.PlaybackState
 import com.aryan.calculator.playback.RepeatMode
-import com.aryan.calculator.ui.theme.AccentPink
+import com.aryan.calculator.ui.theme.AccentBlue
+import com.aryan.calculator.ui.theme.AccentPurple
 import com.aryan.calculator.ui.theme.BgDark
-import com.aryan.calculator.ui.theme.GradientPink
+import com.aryan.calculator.ui.theme.GradientBlue
 import com.aryan.calculator.ui.theme.GradientPurple
 import com.aryan.calculator.ui.theme.HeartRed
+import com.aryan.calculator.ui.theme.ProgressBlue
 import com.aryan.calculator.ui.theme.ShuffleGreen
 import kotlinx.coroutines.delay
 
@@ -129,7 +131,7 @@ fun PlayerScreen(
     )
 
     val repeatColor by animateColorAsState(
-        targetValue = if (state.repeatMode != RepeatMode.OFF) AccentPink else Color.White.copy(alpha = 0.6f),
+        targetValue = if (state.repeatMode != RepeatMode.OFF) AccentBlue else Color.White.copy(alpha = 0.6f),
         animationSpec = tween(300),
         label = "repeatColor"
     )
@@ -330,7 +332,7 @@ fun PlayerScreen(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(GradientPink, GradientPurple)
+                                colors = listOf(GradientBlue, GradientPurple)
                             )
                         ),
                     contentAlignment = Alignment.Center
