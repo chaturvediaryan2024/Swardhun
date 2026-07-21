@@ -208,9 +208,10 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             onDismiss = { songForPlaylist = null },
             onAddToPlaylist = { playlistId ->
                 viewModel.addSongToPlaylist(playlistId, song)
+                songForPlaylist = null
             },
-            onCreatePlaylist = { name ->
-                viewModel.createPlaylist(name)
+            onCreatePlaylistAndAdd = { name ->
+                viewModel.createPlaylistAndAddSong(name, song)
             }
         )
     }

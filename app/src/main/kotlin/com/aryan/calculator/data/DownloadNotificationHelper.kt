@@ -1,5 +1,6 @@
 package com.aryan.calculator.data
 
+import com.aryan.calculator.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -27,7 +28,7 @@ object DownloadNotificationHelper {
 
     fun showDownloadStarted(context: Context, songTitle: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Downloading")
             .setContentText(songTitle)
             .setProgress(0, 0, true)
@@ -44,7 +45,7 @@ object DownloadNotificationHelper {
 
     fun showDownloadComplete(context: Context, songTitle: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Download Complete")
             .setContentText(songTitle)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -60,7 +61,7 @@ object DownloadNotificationHelper {
 
     fun showDownloadFailed(context: Context, songTitle: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Download Failed")
             .setContentText(songTitle)
             .setPriority(NotificationCompat.PRIORITY_LOW)

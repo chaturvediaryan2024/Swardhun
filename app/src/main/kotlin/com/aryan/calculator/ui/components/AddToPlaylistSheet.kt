@@ -27,7 +27,7 @@ fun AddToPlaylistSheet(
     playlists: List<PlaylistWithSongCount>,
     onDismiss: () -> Unit,
     onAddToPlaylist: (Long) -> Unit,
-    onCreatePlaylist: (String) -> Unit
+    onCreatePlaylistAndAdd: (String) -> Unit
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
@@ -80,10 +80,10 @@ fun AddToPlaylistSheet(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(AccentPink.copy(alpha = 0.2f)),
+                        .background(AccentPurple.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Rounded.Add, null, tint = AccentPink)
+                    Icon(Icons.Rounded.Add, null, tint = AccentPurple)
                 }
                 Spacer(Modifier.width(16.dp))
                 Text("Create New Playlist", color = Color.White, fontWeight = FontWeight.Medium)
@@ -151,8 +151,8 @@ fun AddToPlaylistSheet(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = AccentPink,
-                        cursorColor = AccentPink
+                        focusedBorderColor = AccentPurple,
+                        cursorColor = AccentPurple
                     )
                 )
             },
@@ -160,12 +160,13 @@ fun AddToPlaylistSheet(
                 TextButton(
                     onClick = {
                         if (newPlaylistName.isNotBlank()) {
-                            onCreatePlaylist(newPlaylistName.trim())
+                            onCreatePlaylistAndAdd(newPlaylistName.trim())
                             newPlaylistName = ""
                             showCreateDialog = false
+                            onDismiss()
                         }
                     }
-                ) { Text("Create & Add", color = AccentPink) }
+                ) { Text("Create & Add", color = AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateDialog = false; newPlaylistName = "" }) {

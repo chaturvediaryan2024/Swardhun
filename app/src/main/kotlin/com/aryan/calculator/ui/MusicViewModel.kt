@@ -194,6 +194,13 @@ class MusicViewModel(
         }
     }
 
+    fun createPlaylistAndAddSong(name: String, song: Song) {
+        viewModelScope.launch {
+            val playlistId = repository.createPlaylist(name)
+            repository.addSongToPlaylist(playlistId, song)
+        }
+    }
+
     fun deletePlaylist(id: Long) {
         viewModelScope.launch {
             repository.deletePlaylist(id)

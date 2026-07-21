@@ -16,8 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.aryan.calculator.ui.theme.AccentPink
-import com.aryan.calculator.ui.theme.GradientPink
+import com.aryan.calculator.ui.theme.AccentPurple
+import com.aryan.calculator.ui.theme.BgGradientBottom
+import com.aryan.calculator.ui.theme.BgGradientTop
 import com.aryan.calculator.ui.theme.GradientPurple
 import kotlinx.coroutines.delay
 
@@ -27,33 +28,22 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
 
     val alphaAnim = animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(durationMillis = 1000),
+        animationSpec = tween(durationMillis = 400),
         label = "alpha"
     )
 
     val scaleAnim = animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.5f,
+        targetValue = if (startAnimation) 1f else 0.8f,
         animationSpec = tween(
-            durationMillis = 800,
+            durationMillis = 400,
             easing = FastOutSlowInEasing
         ),
         label = "scale"
     )
 
-    val heartBeat = rememberInfiniteTransition(label = "heartbeat")
-    val heartScale by heartBeat.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "heart"
-    )
-
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(2500)
+        delay(1200)
         onSplashComplete()
     }
 
@@ -63,9 +53,8 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF1a1a2e),
-                        Color(0xFF16213e),
-                        Color(0xFF0f0f23)
+                        BgGradientTop,
+                        BgGradientBottom
                     )
                 )
             ),
@@ -85,7 +74,7 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
                     letterSpacing = (-2).sp
                 ),
                 color = Color.White,
-                fontSize = 48.sp
+                fontSize = 52.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -97,49 +86,28 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
                 color = Color.White.copy(alpha = 0.6f),
                 fontSize = 16.sp
             )
-
-            Spacer(modifier = Modifier.height(60.dp))
-
-            // Made by text with heart animation
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "made by ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = "💕",
-                    fontSize = 18.sp,
-                    modifier = Modifier.scale(heartScale)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Creator name with gradient effect
-            Text(
-                text = "★Aαru ☯️",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = AccentPink,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center
-            )
         }
 
-        // Bottom version
-        Text(
-            text = "v3.8",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.3f),
+        // Bottom info
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-        )
+                .padding(bottom = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Developed by Aaru",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 13.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "ver 1.0 • 2026",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.3f),
+                fontSize = 11.sp
+            )
+        }
     }
 }

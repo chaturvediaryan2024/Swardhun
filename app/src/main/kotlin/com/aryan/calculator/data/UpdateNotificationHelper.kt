@@ -1,5 +1,6 @@
 package com.aryan.calculator.data
 
+import com.aryan.calculator.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -53,7 +54,7 @@ object UpdateNotificationHelper {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("🎵 Musify Update Available!")
             .setContentText("Version ${update.versionName} is ready to download")
             .setStyle(NotificationCompat.BigTextStyle()
@@ -62,7 +63,7 @@ object UpdateNotificationHelper {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .addAction(
-                android.R.drawable.stat_sys_download,
+                R.drawable.ic_notification,
                 "Download Now",
                 pendingIntent
             )

@@ -77,7 +77,7 @@ fun LibraryScreen(
                 onClick = { selectedTab = 1 },
                 label = { Text("Playlists") },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = AccentPink,
+                    selectedContainerColor = AccentPurple,
                     selectedLabelColor = Color.White,
                     containerColor = GlassBg,
                     labelColor = Color.White.copy(alpha = 0.7f)
@@ -119,8 +119,8 @@ fun LibraryScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = AccentPink,
-                        cursorColor = AccentPink
+                        focusedBorderColor = AccentPurple,
+                        cursorColor = AccentPurple
                     )
                 )
             },
@@ -133,7 +133,7 @@ fun LibraryScreen(
                             showCreateDialog = false
                         }
                     }
-                ) { Text("Create", color = AccentPink) }
+                ) { Text("Create", color = AccentPurple) }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateDialog = false; newPlaylistName = "" }) {
@@ -355,10 +355,10 @@ private fun PlaylistCard(
             modifier = Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(AccentPink.copy(alpha = 0.2f)),
+                .background(AccentPurple.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.QueueMusic, null, tint = AccentPink, modifier = Modifier.size(28.dp))
+            Icon(Icons.Rounded.QueueMusic, null, tint = AccentPurple, modifier = Modifier.size(28.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {

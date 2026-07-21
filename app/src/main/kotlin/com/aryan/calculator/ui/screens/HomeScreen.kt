@@ -42,8 +42,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.aryan.calculator.data.model.Song
 import com.aryan.calculator.ui.components.SongCard
-import com.aryan.calculator.ui.theme.AccentPink
-import com.aryan.calculator.ui.theme.GradientPink
+import com.aryan.calculator.ui.theme.AccentPurple
+import com.aryan.calculator.ui.theme.BgGradientBottom
+import com.aryan.calculator.ui.theme.BgGradientTop
+import com.aryan.calculator.ui.theme.CardGradient1
+import com.aryan.calculator.ui.theme.CardGradient2
 import com.aryan.calculator.ui.theme.GradientPurple
 import java.util.Calendar
 
@@ -66,7 +69,15 @@ fun HomeScreen(
         else -> "Good Night"
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(BgGradientTop, BgGradientBottom)
+                )
+            )
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,31 +85,21 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = greeting,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.6f)
-                )
-                Text(
-                    text = "Musify",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-1).sp
-                    ),
-                    color = Color.White
-                )
-            }
+            Text(
+                text = "Today",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-1).sp
+                ),
+                color = Color.White,
+                fontSize = 32.sp
+            )
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .clickable { onProfileClick() }
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(GradientPink, GradientPurple)
-                        )
-                    ),
+                    .background(Color.White.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (userPhotoUri.isNotEmpty()) {
@@ -107,7 +108,7 @@ fun HomeScreen(
                         contentDescription = "Profile",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
                     )
                 } else {
@@ -115,7 +116,7 @@ fun HomeScreen(
                         Icons.Rounded.Person,
                         contentDescription = "Profile",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -127,7 +128,7 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = AccentPink)
+                    CircularProgressIndicator(color = AccentPurple)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Loading music...",
@@ -230,7 +231,7 @@ private fun SongCardWithRank(
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
-            color = if (rank <= 3) AccentPink else Color.White.copy(alpha = 0.4f),
+            color = if (rank <= 3) AccentPurple else Color.White.copy(alpha = 0.4f),
             modifier = Modifier.width(36.dp)
         )
 
@@ -255,7 +256,7 @@ private fun SongCardWithRank(
                         .background(Color.Black.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("▶", color = AccentPink, fontSize = 18.sp)
+                    Text("▶", color = AccentPurple, fontSize = 18.sp)
                 }
             }
         }
@@ -266,7 +267,7 @@ private fun SongCardWithRank(
             Text(
                 text = song.title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = if (isPlaying) AccentPink else Color.White,
+                color = if (isPlaying) AccentPurple else Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -316,7 +317,7 @@ private fun RecentlyPlayedCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(AccentPink),
+                            .background(AccentPurple),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("▶", color = Color.White, fontSize = 16.sp)
@@ -328,7 +329,7 @@ private fun RecentlyPlayedCard(
         Text(
             text = song.title,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            color = if (isPlaying) AccentPink else Color.White,
+            color = if (isPlaying) AccentPurple else Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth()
