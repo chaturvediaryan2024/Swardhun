@@ -2,14 +2,12 @@ package com.aryan.calculator.data
 
 import com.aryan.calculator.data.local.LikedSongDao
 import com.aryan.calculator.data.local.LikedSongEntity
-import com.aryan.calculator.data.local.PlaylistDao
-import com.aryan.calculator.data.local.PlaylistEntity
-import com.aryan.calculator.data.local.PlaylistSongEntity
-import com.aryan.calculator.data.local.PlaylistWithSongCount
 import com.aryan.calculator.data.local.RecentlyPlayedDao
 import com.aryan.calculator.data.local.RecentlyPlayedEntity
 import com.aryan.calculator.data.model.Song
 import com.aryan.calculator.data.network.JioSaavnApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -17,8 +15,7 @@ import kotlinx.coroutines.flow.map
 class MusicRepository(
     private val downloadManager: DownloadManager,
     private val likedSongDao: LikedSongDao,
-    private val recentlyPlayedDao: RecentlyPlayedDao,
-    private val playlistDao: PlaylistDao
+    private val recentlyPlayedDao: RecentlyPlayedDao
 ) {
 
     fun observeDownloads(): Flow<List<Song>> = downloadManager.observeDownloads()
@@ -35,6 +32,15 @@ class MusicRepository(
 
     suspend fun home(languages: Set<String> = setOf("hindi")): List<Song> =
         markDownloadedAndLiked(JioSaavnApi.home(languages))
+
+    suspend fun trending(languages: Set<String>): List<Song> =
+        markDownloadedAndLiked(JioSaavnApi.trending(languages))
+
+    suspend fun newReleases(languages: Set<String>): List<Song> =
+        markDownloadedAndLiked(JioSaavnApi.newReleases(languages))
+
+    suspend fun topCharts(languages: Set<String>): List<Song> =
+        markDownloadedAndLiked(JioSaavnApi.topCharts(languages))
 
     suspend fun search(query: String): List<Song> {
         if (query.isBlank()) return emptyList()
@@ -65,28 +71,27 @@ class MusicRepository(
 
     suspend fun isLiked(id: String): Boolean = likedSongDao.isLiked(id)
 
-    // Playlist functions
-    fun observePlaylists(): Flow<List<PlaylistWithSongCount>> = playlistDao.observeAllWithCount()
+    suspend fun getEntityImage(name: String): String? = JioSaavnApi.getEntityImage(name)
 
-    suspend fun getPlaylists(): List<PlaylistEntity> = playlistDao.getAll()
+    suspend fun getCategoryImage(query: String): String? =
+        JioSaavnApi.searchSongs(query, 1).firstOrNull()?.artwork?.takeIf { it.isNotBlank() }
 
-    suspend fun createPlaylist(name: String): Long = playlistDao.insertPlaylist(PlaylistEntity(name = name))
-
-    suspend fun deletePlaylist(id: Long) = playlistDao.deletePlaylist(id)
-
-    suspend fun renamePlaylist(id: Long, name: String) = playlistDao.renamePlaylist(id, name)
-
-    fun observePlaylistSongs(playlistId: Long): Flow<List<Song>> =
-        playlistDao.observeSongsInPlaylist(playlistId).map { list ->
-            list.map { it.toSong() }
-        }
-
-    suspend fun addSongToPlaylist(playlistId: Long, song: Song) {
-        playlistDao.addSongToPlaylist(song.toPlaylistSongEntity(playlistId))
+    /**
+     * Return a copy of [song] with a fresh, playable stream URL. Local downloads
+     * (file:// URLs) are returned untouched. If the network re-resolve fails the
+     * original URL is kept so playback still attempts (better than nothing).
+     */
+    suspend fun refreshStreamUrl(song: Song): Song {
+        if (!song.streamUrl.startsWith("http")) return song // local download
+        val fresh = JioSaavnApi.getSongById(song.id)
+        return if (fresh != null && fresh.streamUrl.startsWith("http")) {
+            song.copy(streamUrl = fresh.streamUrl)
+        } else song
     }
 
-    suspend fun removeSongFromPlaylist(playlistId: Long, songId: String) =
-        playlistDao.removeSongFromPlaylist(playlistId, songId)
+    suspend fun refreshStreamUrls(songs: List<Song>): List<Song> = coroutineScope {
+        songs.map { async { refreshStreamUrl(it) } }.map { it.await() }
+    }
 
     suspend fun addToRecentlyPlayed(song: Song) {
         recentlyPlayedDao.insert(song.toRecentlyPlayedEntity())
@@ -136,27 +141,6 @@ class MusicRepository(
 
     private fun Song.toRecentlyPlayedEntity() = RecentlyPlayedEntity(
         id = id,
-        title = title,
-        artist = artist,
-        album = album,
-        duration = duration,
-        artwork = artwork,
-        streamUrl = streamUrl
-    )
-
-    private fun Song.toPlaylistSongEntity(playlistId: Long) = PlaylistSongEntity(
-        playlistId = playlistId,
-        songId = id,
-        title = title,
-        artist = artist,
-        album = album,
-        duration = duration,
-        artwork = artwork,
-        streamUrl = streamUrl
-    )
-
-    private fun PlaylistSongEntity.toSong() = Song(
-        id = songId,
         title = title,
         artist = artist,
         album = album,

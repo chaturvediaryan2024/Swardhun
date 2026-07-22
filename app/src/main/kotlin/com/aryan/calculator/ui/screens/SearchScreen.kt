@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -44,56 +47,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.aryan.calculator.data.model.Song
+import com.aryan.calculator.ui.MusicViewModel
 import com.aryan.calculator.ui.components.SongCard
 import com.aryan.calculator.ui.theme.AccentPink
 import com.aryan.calculator.ui.theme.AccentTeal
 import com.aryan.calculator.ui.theme.GlassBg
-
-private data class TrendingItem(val name: String, val type: String)
-private data class CategoryItem(val name: String, val color1: Color, val color2: Color)
-
-private val trendingItems = listOf(
-    TrendingItem("Arijit Singh", "Artist"),
-    TrendingItem("Pushpa 2", "Album"),
-    TrendingItem("Diljit Dosanjh", "Artist"),
-    TrendingItem("Animal", "Album"),
-    TrendingItem("AP Dhillon", "Artist"),
-    TrendingItem("Atif Aslam", "Artist")
-)
-
-private val categories = listOf(
-    CategoryItem("Romance", Color(0xFFE91E63), Color(0xFFC2185B)),
-    CategoryItem("Party", Color(0xFF9C27B0), Color(0xFF7B1FA2)),
-    CategoryItem("Bollywood", Color(0xFFFF5722), Color(0xFFE64A19)),
-    CategoryItem("Punjabi", Color(0xFF00BCD4), Color(0xFF0097A7)),
-    CategoryItem("Workout", Color(0xFF4CAF50), Color(0xFF388E3C)),
-    CategoryItem("Chill", Color(0xFF3F51B5), Color(0xFF303F9F)),
-    CategoryItem("Devotional", Color(0xFFFF9800), Color(0xFFF57C00)),
-    CategoryItem("90s Hits", Color(0xFF795548), Color(0xFF5D4037))
-)
 
 @Composable
 fun SearchScreen(
     query: String,
     results: List<Song>,
     isSearching: Boolean,
+    trending: List<MusicViewModel.TrendingEntry>,
+    categories: List<MusicViewModel.BrowseCategory>,
     onQueryChange: (String) -> Unit,
     onSongClick: (Song) -> Unit,
     onDownloadToggle: (Song) -> Unit,
     currentPlayingSongId: String? = null,
     onDownloadClick: (Song) -> Unit = {}
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "Search",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-1).sp
-            ),
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
             value = query,
@@ -155,7 +136,11 @@ fun SearchScreen(
                     )
                 }
             }
-            query.isBlank() -> SearchIdleContent(onQueryChange = onQueryChange)
+            query.isBlank() -> SearchIdleContent(
+                trending = trending,
+                categories = categories,
+                onQueryChange = onQueryChange
+            )
             results.isEmpty() -> Box(
                 Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -202,13 +187,17 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SearchIdleContent(onQueryChange: (String) -> Unit) {
+private fun SearchIdleContent(
+    trending: List<MusicViewModel.TrendingEntry>,
+    categories: List<MusicViewModel.BrowseCategory>,
+    onQueryChange: (String) -> Unit
+) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = 120.dp)
     ) {
         item {
             Text(
-                text = "Trending",
+                text = "Trending Artists",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color.White,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
@@ -220,7 +209,7 @@ private fun SearchIdleContent(onQueryChange: (String) -> Unit) {
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(trendingItems) { item ->
+                items(trending) { item ->
                     TrendingCard(
                         item = item,
                         onClick = { onQueryChange(item.name) }
@@ -239,27 +228,30 @@ private fun SearchIdleContent(onQueryChange: (String) -> Unit) {
             )
         }
 
-        item {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.height(400.dp)
+        // 2-column grid of Spotify-style category cards.
+        items(categories.chunked(2)) { rowItems ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(categories) { category ->
-                    CategoryCard(
-                        category = category,
-                        onClick = { onQueryChange("${category.name} songs") }
-                    )
+                rowItems.forEach { category ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        CategoryCard(
+                            category = category,
+                            onClick = { onQueryChange(category.query) }
+                        )
+                    }
                 }
+                if (rowItems.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun TrendingCard(item: TrendingItem, onClick: () -> Unit) {
+private fun TrendingCard(item: MusicViewModel.TrendingEntry, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .width(100.dp)
@@ -277,11 +269,22 @@ private fun TrendingCard(item: TrendingItem, onClick: () -> Unit) {
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = item.name.take(2).uppercase(),
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color.White
-            )
+            if (item.imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Text(
+                    text = item.name.take(2).uppercase(),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -301,24 +304,41 @@ private fun TrendingCard(item: TrendingItem, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CategoryCard(category: CategoryItem, onClick: () -> Unit) {
+private fun CategoryCard(category: MusicViewModel.BrowseCategory, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(category.color1, category.color2)
-                )
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+            .height(100.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(category.color))
+            .clickable(onClick = onClick)
     ) {
+        // Category name, top-left
         Text(
             text = category.name,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color.White
+            color = Color.White,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(12.dp)
+                .fillMaxWidth(0.62f)
         )
+        // Tilted album-art thumbnail, bottom-right corner (Spotify style)
+        if (category.imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = category.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 0.dp, bottom = 0.dp)
+                    .offset(x = 8.dp, y = 8.dp)
+                    .rotate(28f)
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(6.dp))
+            )
+        }
     }
 }

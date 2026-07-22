@@ -11,6 +11,12 @@ val SurfaceElevated = Color(0xFF141c2e)
 val CardBg = Color(0xFF111827)
 val GlassBg = Color(0xFF1a2235)
 
+// Lime/green accent (premium reference look)
+val AccentLime = Color(0xFFC6F432)
+val AccentLimeDark = Color(0xFF9FD314)
+val LimeGlowStart = Color(0xFFD4FA5A)
+val LimeGlowEnd = Color(0xFF9FD314)
+
 val AccentRed = Color(0xFFFA2D48)
 val AccentPink = Color(0xFFFF2D55)
 val AccentPurple = Color(0xFF818cf8)

@@ -31,8 +31,7 @@ class CalculatorApp : Application() {
         repository = MusicRepository(
             downloadManager = downloadManager,
             likedSongDao = db.likedSongDao(),
-            recentlyPlayedDao = db.recentlyPlayedDao(),
-            playlistDao = db.playlistDao()
+            recentlyPlayedDao = db.recentlyPlayedDao()
         )
         playerController = PlayerController(this)
         userPreferences = UserPreferences(this)

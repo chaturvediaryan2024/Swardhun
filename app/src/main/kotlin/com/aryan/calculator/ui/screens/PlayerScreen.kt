@@ -1,11 +1,15 @@
 package com.aryan.calculator.ui.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,12 +40,17 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,7 +76,9 @@ import com.aryan.calculator.data.model.Song
 import com.aryan.calculator.ui.components.SongOptionsSheet
 import com.aryan.calculator.playback.PlaybackState
 import com.aryan.calculator.playback.RepeatMode
+import com.aryan.calculator.ui.MusicViewModel
 import com.aryan.calculator.ui.theme.AccentBlue
+import com.aryan.calculator.ui.theme.AccentLime
 import com.aryan.calculator.ui.theme.AccentPurple
 import com.aryan.calculator.ui.theme.BgDark
 import com.aryan.calculator.ui.theme.GradientBlue
@@ -94,9 +105,13 @@ fun PlayerScreen(
     onDownload: () -> Unit = {},
     onAddToQueue: () -> Unit = {},
     onShare: () -> Unit = {},
-    onViewArtist: () -> Unit = {}
+    onViewArtist: () -> Unit = {},
+    downloadStatus: MusicViewModel.DownloadStatus? = null,
+    onSetSpeed: (Float) -> Unit = {},
+    currentSpeed: Float = 1f
 ) {
     var showOptionsMenu by remember { mutableStateOf(false) }
+    var showSpeedDialog by remember { mutableStateOf(false) }
     val song = state.currentSong
 
     LaunchedEffect(state.isPlaying) {
@@ -118,6 +133,20 @@ fun PlayerScreen(
         label = "artworkScale"
     )
 
+    // Spin the circular artwork like a vinyl record -- only while playing.
+    // Pausing freezes it at the current angle; resuming continues from there.
+    val artworkRotation = remember { Animatable(0f) }
+    LaunchedEffect(state.isPlaying) {
+        if (state.isPlaying) {
+            artworkRotation.animateTo(
+                targetValue = artworkRotation.value + 360_000f,
+                animationSpec = tween(durationMillis = 20_000 * 1000, easing = LinearEasing)
+            )
+        } else {
+            artworkRotation.stop()
+        }
+    }
+
     val likeColor by animateColorAsState(
         targetValue = if (isLiked) HeartRed else Color.White,
         animationSpec = tween(300),
@@ -131,7 +160,7 @@ fun PlayerScreen(
     )
 
     val repeatColor by animateColorAsState(
-        targetValue = if (state.repeatMode != RepeatMode.OFF) AccentBlue else Color.White.copy(alpha = 0.6f),
+        targetValue = if (state.repeatMode != RepeatMode.OFF) AccentLime else Color.White.copy(alpha = 0.6f),
         animationSpec = tween(300),
         label = "repeatColor"
     )
@@ -223,8 +252,9 @@ fun PlayerScreen(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .shadow(40.dp, RoundedCornerShape(16.dp))
-                        .clip(RoundedCornerShape(16.dp))
+                        .shadow(40.dp, CircleShape)
+                        .clip(CircleShape)
+                        .rotate(artworkRotation.value)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
             }
@@ -274,8 +304,8 @@ fun PlayerScreen(
                 onValueChange = { onSeek(it.toLong()) },
                 valueRange = 0f..durationF,
                 colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = Color.White,
+                    thumbColor = AccentLime,
+                    activeTrackColor = AccentLime,
                     inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                 ),
                 modifier = Modifier.fillMaxWidth()
@@ -330,11 +360,7 @@ fun PlayerScreen(
                         .scale(playButtonScale)
                         .shadow(12.dp, CircleShape)
                         .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(GradientBlue, GradientPurple)
-                            )
-                        ),
+                        .background(AccentLime),
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(
@@ -344,7 +370,7 @@ fun PlayerScreen(
                         Icon(
                             imageVector = if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                             contentDescription = if (state.isPlaying) "Pause" else "Play",
-                            tint = Color.White,
+                            tint = Color.Black,
                             modifier = Modifier.size(44.dp)
                         )
                     }
@@ -386,6 +412,15 @@ fun PlayerScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 }
+                // Playback speed
+                TextButton(onClick = { showSpeedDialog = true }) {
+                    Text(
+                        text = "${currentSpeed}x",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (currentSpeed != 1f) AccentLime else Color.White.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 IconButton(onClick = onShowQueue) {
                     Icon(
                         Icons.Rounded.QueueMusic,
@@ -395,6 +430,17 @@ fun PlayerScreen(
                     )
                 }
             }
+        }
+
+        // Download notification in player screen
+        downloadStatus?.let { status ->
+            DownloadNotification(
+                status = status,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 60.dp)
+            )
         }
     }
 
@@ -425,6 +471,47 @@ fun PlayerScreen(
             }
         )
     }
+
+    if (showSpeedDialog) {
+        val speeds = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
+        AlertDialog(
+            onDismissRequest = { showSpeedDialog = false },
+            containerColor = BgDark,
+            title = { Text("Playback Speed", color = Color.White) },
+            text = {
+                Column {
+                    speeds.forEach { speed ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onSetSpeed(speed)
+                                    showSpeedDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${speed}x",
+                                color = if (speed == currentSpeed) AccentBlue else Color.White,
+                                fontWeight = if (speed == currentSpeed) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (speed == currentSpeed) {
+                                Icon(Icons.Rounded.CheckCircle, null, tint = AccentBlue, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSpeedDialog = false }) {
+                    Text("Close", color = AccentBlue)
+                }
+            }
+        )
+    }
+
 }
 
 private fun formatMs(ms: Long): String {
@@ -432,4 +519,58 @@ private fun formatMs(ms: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "%d:%02d".format(minutes, seconds)
+}
+
+@Composable
+private fun DownloadNotification(
+    status: MusicViewModel.DownloadStatus,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = when {
+        status.isFailed -> Color(0xFFef4444)
+        status.isRemoved -> Color(0xFFf97316)
+        status.isComplete -> Color(0xFF22c55e)
+        else -> Color(0xFF3b82f6)
+    }
+
+    val text = when {
+        status.isFailed -> "Download failed"
+        status.isRemoved -> "Removed: ${status.songTitle}"
+        status.isComplete -> "Downloaded: ${status.songTitle}"
+        else -> "Downloading: ${status.songTitle}"
+    }
+
+    Row(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (status.isComplete || status.isFailed || status.isRemoved) {
+            Icon(
+                if (status.isFailed) Icons.Rounded.Error else Icons.Rounded.CheckCircle,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        } else {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }

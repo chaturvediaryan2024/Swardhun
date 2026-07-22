@@ -42,4 +42,13 @@ class UserPreferences(context: Context) {
     fun setSelectedLanguages(languages: Set<String>) {
         prefs.edit().putStringSet("languages", languages).apply()
     }
+
+    // Audio quality: "high" (320kbps) or "normal" (160kbps)
+    private val _audioQuality = MutableStateFlow(prefs.getString("audio_quality", "high") ?: "high")
+    val audioQuality: StateFlow<String> = _audioQuality.asStateFlow()
+
+    fun setAudioQuality(quality: String) {
+        prefs.edit().putString("audio_quality", quality).apply()
+        _audioQuality.value = quality
+    }
 }

@@ -114,6 +114,48 @@ object JioSaavnApi {
         }
     }
 
+    /**
+     * Re-resolve a fresh, playable stream URL for a song by its id.
+     * JioSaavn stream URLs are time-limited, so a song saved in a playlist / liked /
+     * recently-played days ago will have a dead URL -- this fetches a live one.
+     */
+    suspend fun getSongById(id: String): Song? {
+        val url = "$BASE?__call=song.getDetails&pids=${encode(id)}$COMMON"
+        return try {
+            val json = JSONObject(getText(url))
+            // api_version 4 -> { "songs": [ {...} ] }
+            json.optJSONArray("songs")?.takeIf { it.length() > 0 }?.let {
+                return mapSong(it.optJSONObject(0) ?: return null)
+            }
+            // older shape -> { "<id>": {...} }
+            json.optJSONObject(id)?.let { return mapSong(it) }
+            // fallback: first object that looks like a song
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val obj = json.optJSONObject(keys.next())
+                if (obj != null && obj.has("more_info")) return mapSong(obj)
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Real image (photo) for an artist/entity by name -- used by the search "Trending" row. */
+    suspend fun getEntityImage(name: String): String? {
+        // Artist search first (gives the artist's real photo).
+        val artistUrl = "$BASE?__call=search.getArtistResults&q=${encode(name)}&n=1$COMMON"
+        runCatching {
+            val json = JSONObject(getText(artistUrl))
+            val results = json.optJSONArray("results") ?: JSONArray()
+            val img = results.optJSONObject(0)?.optString("image")
+            if (!img.isNullOrBlank()) return upgradeImg(img)
+        }
+        // Fallback: first matching song's artwork.
+        return runCatching { searchSongs(name, 1).firstOrNull()?.artwork?.takeIf { it.isNotBlank() } }
+            .getOrNull()
+    }
+
     suspend fun getAlbumSongs(albumId: String): List<Song> {
         val url = "$BASE?__call=content.getAlbumDetails&albumid=${encode(albumId)}$COMMON"
         return try {
@@ -173,39 +215,72 @@ object JioSaavnApi {
         merged
     }
 
-    suspend fun home(languages: Set<String> = setOf("hindi")): List<Song> = coroutineScope {
-        val trendingQueries = listOf(
-            "latest bollywood hits 2024",
-            "arijit singh new songs",
-            "top hindi songs 2024",
-            "trending punjabi songs 2024",
-            "new romantic hindi songs",
-            "bollywood party songs",
-            "atif aslam hits",
-            "jubin nautiyal songs",
-            "diljit dosanjh",
-            "ap dhillon"
-        )
+    /**
+     * Runs several album/movie searches in parallel, merges + de-dupes.
+     * Uses the album-aware [search] so movie names surface their full soundtrack
+     * with the ORIGINAL poster art (instead of shared compilation covers).
+     * Interleaves songs from each source so the feed isn't all one movie at the top.
+     */
+    private suspend fun searchMix(
+        queries: List<String>,
+        perQuery: Int = 10,
+        minDuration: Int = 90,
+        limit: Int = 60
+    ): List<Song> = coroutineScope {
+        val perSource = queries.map { q ->
+            async { runCatching { search(q, perQuery).filter { it.duration >= minDuration } }.getOrDefault(emptyList()) }
+        }.map { it.await() }
 
-        val deferredList = trendingQueries.map { query ->
-            async {
-                try {
-                    searchSongs(query, 10)
-                } catch (e: Exception) {
-                    emptyList<Song>()
-                }
-            }
-        }
-
-        val allSongs = deferredList.flatMap { it.await() }
-
+        // Round-robin interleave for variety.
         val seen = HashSet<String>()
         val merged = ArrayList<Song>()
-        for (song in allSongs) {
-            if (song.duration >= 120 && seen.add(song.id)) merged.add(song)
+        var idx = 0
+        var added = true
+        while (added && merged.size < limit) {
+            added = false
+            for (source in perSource) {
+                if (idx < source.size) {
+                    val song = source[idx]
+                    if (seen.add(song.id)) merged.add(song)
+                    added = true
+                }
+            }
+            idx++
         }
-        merged.take(60)
+        merged.take(limit)
     }
+
+    // Movie / album name queries -> each returns songs with their ORIGINAL poster art.
+    // (Generic "trending/top/hits" queries return compilation covers, all the same image.)
+    private val HOME_QUERIES = listOf(
+        "Animal", "Stree 2", "Bhediya", "Munjya", "Teri Baaton Mein Aisa Uljha Jiya",
+        "Jawan", "Rockstar", "Aashiqui 2", "Kabir Singh", "Sanam Teri Kasam",
+        "Chandu Champion", "Bad Newz"
+    )
+    private val TRENDING_QUERIES = listOf(
+        "Stree 2", "Animal", "Pushpa 2", "Munjya", "Bhediya",
+        "Teri Baaton Mein Aisa Uljha Jiya", "Kalki 2898 AD", "Bad Newz", "Jawan"
+    )
+    private val NEW_RELEASE_QUERIES = listOf(
+        "Bhool Bhulaiyaa 3", "Singham Again", "Pushpa 2", "Vicky Vidya Ka Woh Wala Video",
+        "Devara", "Amar Singh Chamkila", "Sky Force", "Chhaava", "Sanam Teri Kasam"
+    )
+    private val TOP_QUERIES = listOf(
+        "Aashiqui 2", "Kabir Singh", "Rockstar", "Yeh Jawaani Hai Deewani",
+        "Ae Dil Hai Mushkil", "Sanam Teri Kasam", "Half Girlfriend", "Arjun Reddy"
+    )
+
+    suspend fun home(languages: Set<String> = setOf("hindi")): List<Song> =
+        searchMix(HOME_QUERIES, perQuery = 10, minDuration = 120, limit = 60)
+
+    suspend fun trending(languages: Set<String> = setOf("hindi")): List<Song> =
+        searchMix(TRENDING_QUERIES, perQuery = 12, minDuration = 90, limit = 40)
+
+    suspend fun newReleases(languages: Set<String> = setOf("hindi")): List<Song> =
+        searchMix(NEW_RELEASE_QUERIES, perQuery = 12, minDuration = 90, limit = 40)
+
+    suspend fun topCharts(languages: Set<String> = setOf("hindi")): List<Song> =
+        searchMix(TOP_QUERIES, perQuery = 12, minDuration = 90, limit = 40)
 
     private suspend fun getCharts(language: String): List<Song> {
         val url = "$BASE?__call=content.getCharts&type=song&language=$language$COMMON"

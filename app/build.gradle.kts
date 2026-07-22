@@ -12,8 +12,8 @@ android {
         applicationId = "com.aryan.calculator"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 44
+        versionName = "4.4"
     }
 
     buildTypes {

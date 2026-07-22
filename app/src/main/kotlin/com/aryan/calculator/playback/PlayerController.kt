@@ -24,7 +24,8 @@ data class PlaybackState(
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
     val shuffleEnabled: Boolean = false,
-    val repeatMode: RepeatMode = RepeatMode.OFF
+    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val playbackSpeed: Float = 1f
 ) {
     val currentSong: Song? get() = queue.getOrNull(currentIndex)
 }
@@ -133,6 +134,16 @@ class PlayerController(context: Context) {
     }
 
     fun seekTo(positionMs: Long) = controller?.seekTo(positionMs) ?: Unit
+
+    fun setPlaybackSpeed(speed: Float) {
+        val c = controller ?: return
+        c.setPlaybackSpeed(speed)
+        _state.value = _state.value.copy(playbackSpeed = speed)
+    }
+
+    fun pause() {
+        controller?.pause()
+    }
 
     fun toggleShuffle() {
         val c = controller ?: return

@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.aryan.calculator.data.model.Song
+import com.aryan.calculator.ui.theme.AccentLime
 import com.aryan.calculator.ui.theme.AccentPink
 import com.aryan.calculator.ui.theme.GlassBg
 import com.aryan.calculator.ui.theme.GradientPink
@@ -116,17 +117,13 @@ fun MiniPlayer(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(GradientPink, GradientPurple)
-                                    )
-                                ),
+                                .background(AccentLime),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                 contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color.White,
+                                tint = Color.Black,
                                 modifier = Modifier.size(26.dp)
                             )
                         }
@@ -148,7 +145,7 @@ fun MiniPlayer(
                         .height(3.dp)
                         .padding(horizontal = 10.dp)
                         .clip(RoundedCornerShape(2.dp)),
-                    color = AccentPink,
+                    color = AccentLime,
                     trackColor = Color.White.copy(alpha = 0.15f)
                 )
                 Spacer(modifier = Modifier.height(6.dp))

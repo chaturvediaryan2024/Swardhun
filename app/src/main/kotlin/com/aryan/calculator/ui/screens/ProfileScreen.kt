@@ -7,32 +7,26 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Equalizer
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Headphones
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -54,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,230 +56,205 @@ import coil.compose.AsyncImage
 import com.aryan.calculator.data.AppUpdate
 import com.aryan.calculator.data.UpdateChecker
 import com.aryan.calculator.data.local.UserProfile
-import com.aryan.calculator.ui.theme.AccentPink
-import com.aryan.calculator.ui.theme.GlassBg
-import com.aryan.calculator.ui.theme.GradientPink
-import com.aryan.calculator.ui.theme.GradientPurple
+import com.aryan.calculator.ui.theme.*
+
+private data class QuickAccess(
+    val label: String,
+    val subtitle: String,
+    val icon: ImageVector,
+    val tint: Color,
+    val onClick: () -> Unit
+)
 
 @Composable
 fun ProfileScreen(
     profile: UserProfile,
+    likedCount: Int,
+    downloadCount: Int,
+    playedCount: Int,
+    listeningMinutes: Int,
     onNameChange: (String) -> Unit,
-    onPhotoChange: (String) -> Unit
+    onPhotoChange: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenLiked: () -> Unit,
+    onOpenDownloads: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onOpenEqualizer: () -> Unit,
+    onShareApp: () -> Unit = {}
 ) {
     var showNameDialog by remember { mutableStateOf(false) }
     var tempName by remember { mutableStateOf(profile.name) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
-    var showAboutDialog by remember { mutableStateOf(false) }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        availableUpdate = UpdateChecker.checkForUpdate()
-    }
+    LaunchedEffect(Unit) { availableUpdate = UpdateChecker.checkForUpdate() }
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
+    val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { onPhotoChange(it.toString()) }
-    }
+    ) { uri: Uri? -> uri?.let { onPhotoChange(it.toString()) } }
+
+    val quickAccess = listOf(
+        QuickAccess("Liked Songs", "$likedCount songs", Icons.Rounded.Favorite, HeartRed, onOpenLiked),
+        QuickAccess("Downloads", "$downloadCount offline", Icons.Rounded.Download, AccentTeal, onOpenDownloads),
+        QuickAccess("History", "Recently played", Icons.Rounded.History, AccentBlue, onOpenHistory),
+        QuickAccess("Queue", "Up next", Icons.Rounded.QueueMusic, AccentPurple, onOpenQueue),
+        QuickAccess("Equalizer", "Tune your sound", Icons.Rounded.Equalizer, AccentOrange, onOpenEqualizer),
+        QuickAccess("Share App", "Invite your friends", Icons.Rounded.Share, AccentPink, onShareApp),
+        QuickAccess("Settings", "App preferences", Icons.Rounded.Settings, AccentLime, onOpenSettings)
+    )
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(BgDark),
         contentPadding = PaddingValues(bottom = 120.dp)
     ) {
+        // ---- Header with premium gradient ----
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                GradientPurple.copy(alpha = 0.6f),
-                                GradientPink.copy(alpha = 0.3f),
+                                GradientPurple.copy(alpha = 0.7f),
+                                AccentBlue.copy(alpha = 0.35f),
                                 Color.Transparent
                             )
                         )
-                    ),
+                    )
+                    .statusBarsPadding()
+                    .padding(top = 24.dp, bottom = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 40.dp)
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box {
                         if (profile.photoUri.isNotEmpty()) {
                             AsyncImage(
                                 model = profile.photoUri,
-                                contentDescription = "Profile Photo",
+                                contentDescription = "Profile",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(110.dp)
                                     .clip(CircleShape)
-                                    .border(3.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                                    .border(3.dp, AccentLime.copy(alpha = 0.6f), CircleShape)
                             )
                         } else {
                             Box(
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(110.dp)
                                     .clip(CircleShape)
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(GradientPink, GradientPurple)
-                                        )
-                                    ),
+                                    .background(Brush.linearGradient(listOf(GradientPink, GradientPurple)))
+                                    .border(3.dp, AccentLime.copy(alpha = 0.6f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    Icons.Rounded.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(50.dp)
-                                )
+                                Icon(Icons.Rounded.Person, null, tint = Color.White, modifier = Modifier.size(54.dp))
                             }
                         }
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .size(32.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
-                                .background(AccentPink)
-                                .clickable { photoPickerLauncher.launch("image/*") },
+                                .background(AccentLime)
+                                .clickable { photoPicker.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Rounded.CameraAlt,
-                                contentDescription = "Change Photo",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Rounded.CameraAlt, "Change photo", tint = Color.Black, modifier = Modifier.size(18.dp))
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            tempName = profile.name
-                            showNameDialog = true
-                        }
-                    ) {
-                        Text(
-                            text = profile.name.ifEmpty { "Set Your Name" },
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = if (profile.name.isEmpty()) Color.White.copy(alpha = 0.5f) else Color.White
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            Icons.Rounded.Edit,
-                            contentDescription = "Edit",
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
+                    Spacer(Modifier.height(14.dp))
                     Text(
-                        text = "Music Lover",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.6f)
+                        text = profile.name.ifEmpty { "Set Your Name" },
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = if (profile.name.isEmpty()) Color.White.copy(alpha = 0.6f) else Color.White
                     )
+                    Text("Music Lover", style = MaterialTheme.typography.bodyMedium, color = AccentLime)
+
+                    Spacer(Modifier.height(14.dp))
+                    Button(
+                        onClick = { tempName = profile.name; showNameDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.12f)),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Icon(Icons.Rounded.Edit, null, Modifier.size(18.dp), tint = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Edit Profile", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
 
+        // ---- Update banner (if available) ----
         availableUpdate?.let { update ->
             item {
-                Card(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
-                        .clickable { showUpdateDialog = true },
-                    colors = CardDefaults.cardColors(containerColor = AccentPink.copy(alpha = 0.15f)),
-                    border = BorderStroke(1.dp, AccentPink.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(16.dp)
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AccentLime.copy(alpha = 0.15f))
+                        .border(1.dp, AccentLime.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        .clickable { showUpdateDialog = true }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(AccentPink),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.SystemUpdate,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Update Available!",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Version ${update.versionName} is ready",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f)
-                            )
-                        }
-                        Button(
-                            onClick = { showUpdateDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Update", fontWeight = FontWeight.Bold)
-                        }
+                    Icon(Icons.Rounded.SystemUpdate, null, tint = AccentLime, modifier = Modifier.size(26.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Update available", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Version ${update.versionName} is ready", color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodySmall)
                     }
+                    Icon(Icons.Rounded.ChevronRight, null, tint = Color.White.copy(alpha = 0.5f))
                 }
             }
         }
 
+        // ---- Listening statistics ----
         item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-            )
+            SectionLabel("Your Stats")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatTile("Played", playedCount.toString(), Icons.Rounded.MusicNote, AccentBlue, Modifier.weight(1f))
+                StatTile("Liked", likedCount.toString(), Icons.Rounded.Favorite, HeartRed, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatTile("Downloads", downloadCount.toString(), Icons.Rounded.Download, AccentTeal, Modifier.weight(1f))
+                StatTile(
+                    "Listening",
+                    if (listeningMinutes >= 60) "${listeningMinutes / 60}h ${listeningMinutes % 60}m" else "${listeningMinutes}m",
+                    Icons.Rounded.Headphones, AccentOrange, Modifier.weight(1f)
+                )
+            }
         }
 
-        item {
-            SettingsItem(
-                icon = Icons.Rounded.Notifications,
-                title = "Notifications",
-                subtitle = "Manage notifications",
-                onClick = {
-                    android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        context.startActivity(this)
-                    }
+        // ---- Quick access ----
+        item { SectionLabel("Your Library") }
+        items(quickAccess.chunked(2).size) { rowIndex ->
+            val rowItems = quickAccess.chunked(2)[rowIndex]
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowItems.forEach { qa ->
+                    QuickAccessCard(qa, Modifier.weight(1f))
                 }
-            )
-        }
-
-        item {
-            SettingsItem(
-                icon = Icons.Rounded.Info,
-                title = "About Musify",
-                subtitle = "Version 3.8",
-                onClick = { showAboutDialog = true }
-            )
+                if (rowItems.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
     }
 
@@ -292,9 +262,7 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showNameDialog = false },
             containerColor = GlassBg,
-            title = {
-                Text("Your Name", color = Color.White)
-            },
+            title = { Text("Your Name", color = Color.White) },
             text = {
                 OutlinedTextField(
                     value = tempName,
@@ -302,10 +270,8 @@ fun ProfileScreen(
                     placeholder = { Text("Enter your name", color = Color.White.copy(alpha = 0.5f)) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = AccentPink,
-                        focusedBorderColor = AccentPink,
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        cursorColor = AccentLime, focusedBorderColor = AccentLime,
                         unfocusedBorderColor = Color.White.copy(alpha = 0.3f)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -313,14 +279,9 @@ fun ProfileScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        onNameChange(tempName)
-                        showNameDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
-                ) {
-                    Text("Save")
-                }
+                    onClick = { onNameChange(tempName); showNameDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentLime)
+                ) { Text("Save", color = Color.Black) }
             },
             dismissButton = {
                 TextButton(onClick = { showNameDialog = false }) {
@@ -334,53 +295,22 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showUpdateDialog = false },
             containerColor = GlassBg,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Rounded.SystemUpdate,
-                        contentDescription = null,
-                        tint = AccentPink,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("New Update", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
+            title = { Text("New Update", color = Color.White, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text(
-                        text = "Version ${availableUpdate!!.versionName}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = AccentPink,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Version ${availableUpdate!!.versionName}", color = AccentLime, fontWeight = FontWeight.Bold)
                     if (availableUpdate!!.releaseNotes.isNotEmpty()) {
-                        Text(
-                            text = "What's New:",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = availableUpdate!!.releaseNotes.take(500),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(availableUpdate!!.releaseNotes.take(400), color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        UpdateChecker.openDownloadPage(context, availableUpdate!!.downloadUrl)
-                        showUpdateDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
-                ) {
-                    Text("Download", fontWeight = FontWeight.Bold)
-                }
+                    onClick = { UpdateChecker.openDownloadPage(context, availableUpdate!!.downloadUrl); showUpdateDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentLime)
+                ) { Text("Download", color = Color.Black, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showUpdateDialog = false }) {
@@ -389,114 +319,53 @@ fun ProfileScreen(
             }
         )
     }
+}
 
-    if (showAboutDialog) {
-        AlertDialog(
-            onDismissRequest = { showAboutDialog = false },
-            containerColor = GlassBg,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Rounded.Info,
-                        contentDescription = null,
-                        tint = AccentPink,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("About Musify", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Musify",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = AccentPink,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Version 3.8",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "A beautiful music streaming app",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = "made by 💕",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "★Aαru ☯️",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = AccentPink,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showAboutDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentPink)
-                ) {
-                    Text("OK")
-                }
-            }
-        )
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        color = Color.White,
+        modifier = Modifier.padding(start = 20.dp, top = 22.dp, bottom = 12.dp)
+    )
+}
+
+@Composable
+private fun StatTile(label: String, value: String, icon: ImageVector, tint: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(GlassBg)
+            .padding(16.dp)
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.height(10.dp))
+        Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color.White)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.5f))
     }
 }
 
 @Composable
-private fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+private fun QuickAccessCard(qa: QuickAccess, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(GlassBg)
+            .clickable(onClick = qa.onClick)
+            .padding(16.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(GlassBg),
+                .background(qa.tint.copy(alpha = 0.18f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = AccentPink,
-                modifier = Modifier.size(22.dp)
-            )
+            Icon(qa.icon, null, tint = qa.tint, modifier = Modifier.size(24.dp))
         }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = Color.White
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.5f)
-            )
-        }
-        Icon(
-            Icons.Rounded.ChevronRight,
-            contentDescription = null,
-            tint = Color.White.copy(alpha = 0.3f)
-        )
+        Spacer(Modifier.height(12.dp))
+        Text(qa.label, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
+        Text(qa.subtitle, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.5f))
     }
 }

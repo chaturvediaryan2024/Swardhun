@@ -20,7 +20,6 @@ import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -57,8 +56,7 @@ fun SongOptionsSheet(
     onLike: () -> Unit,
     onAddToQueue: () -> Unit,
     onShare: () -> Unit,
-    onViewArtist: () -> Unit,
-    onAddToPlaylist: () -> Unit = {}
+    onViewArtist: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
@@ -148,15 +146,6 @@ fun SongOptionsSheet(
                 label = "Add to Queue",
                 onClick = {
                     onAddToQueue()
-                    onDismiss()
-                }
-            )
-
-            OptionItem(
-                icon = Icons.Rounded.PlaylistAdd,
-                label = "Add to Playlist",
-                onClick = {
-                    onAddToPlaylist()
                     onDismiss()
                 }
             )

@@ -1,6 +1,9 @@
 package com.aryan.calculator
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.media.audiofx.AudioEffect
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,7 +17,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -49,11 +54,14 @@ import com.aryan.calculator.ui.components.BottomNav
 import com.aryan.calculator.ui.components.MiniPlayer
 import com.aryan.calculator.ui.components.NavTab
 import com.aryan.calculator.ui.components.SongOptionsSheet
-import com.aryan.calculator.ui.components.AddToPlaylistSheet
-import com.aryan.calculator.ui.screens.LibraryScreen
+import com.aryan.calculator.ui.screens.LikedSongsScreen
+import com.aryan.calculator.ui.screens.DownloadsScreen
+import com.aryan.calculator.ui.screens.HistoryScreen
+import com.aryan.calculator.ui.screens.QueueScreen
 import com.aryan.calculator.ui.screens.HomeScreen
 import com.aryan.calculator.ui.screens.PlayerScreen
 import com.aryan.calculator.ui.screens.ProfileScreen
+import com.aryan.calculator.ui.screens.SettingsScreen
 import com.aryan.calculator.ui.screens.SearchScreen
 import com.aryan.calculator.ui.screens.SplashScreen
 import com.aryan.calculator.ui.screens.UpdateScreen
@@ -99,7 +107,8 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var showPlayer by remember { mutableStateOf(false) }
     var selectedSongForOptions by remember { mutableStateOf<Song?>(null) }
-    var songForPlaylist by remember { mutableStateOf<Song?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
+    var profileRoute by remember { mutableStateOf<ProfileRoute?>(null) }
     var availableUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var checkingUpdate by remember { mutableStateOf(true) }
 
@@ -114,14 +123,12 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
         return
     }
 
-    // Show update screen if update available (forced update)
+    // Show update screen only if an update is actually available (forced update).
+    // We do NOT block the UI while the check is still running -- that used to show
+    // a blank/black screen on slow networks. The app renders immediately and, if an
+    // update is later found, this recomposes into the UpdateScreen.
     if (availableUpdate != null) {
         UpdateScreen(update = availableUpdate!!)
-        return
-    }
-
-    // Show loading while checking for update
-    if (checkingUpdate) {
         return
     }
 
@@ -138,8 +145,13 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val userProfile by viewModel.userProfile.collectAsState()
     val toastMessage by viewModel.toastMessage.collectAsState()
     val downloadingIds by viewModel.downloadingIds.collectAsState()
-    val playlists by viewModel.playlists.collectAsState()
     val downloadStatus by viewModel.downloadStatus.collectAsState()
+    val trending by viewModel.trending.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val categorySongs by viewModel.categorySongs.collectAsState()
+    val loadingCategory by viewModel.loadingCategory.collectAsState()
+    val audioQuality by viewModel.audioQuality.collectAsState()
+    val selectedLanguages by viewModel.selectedLanguages.collectAsState()
 
     val context = LocalContext.current
 
@@ -153,13 +165,18 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
     val isDownloading = downloadingIds.isNotEmpty()
 
     val currentSong = playbackState.currentSong
-    val isCurrentLiked = viewModel.isCurrentSongLiked()
+    // Reactive: recomputes whenever likedIds or the current song changes so the
+    // player's heart updates immediately when toggled.
+    val isCurrentLiked = currentSong?.let { likedIds.contains(it.id) } ?: false
 
     // Back button handling
     BackHandler(enabled = showPlayer || selectedTab != NavTab.HOME) {
         when {
             showPlayer -> showPlayer = false
-            selectedTab != NavTab.HOME -> selectedTab = NavTab.HOME
+            selectedTab != NavTab.HOME -> {
+                if (selectedTab == NavTab.SEARCH) viewModel.clearSearch()
+                selectedTab = NavTab.HOME
+            }
         }
     }
 
@@ -178,18 +195,121 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             isLiked = isCurrentLiked,
             onDownload = { viewModel.toggleDownload(currentSong) },
             onAddToQueue = { viewModel.addToQueue(currentSong) },
-            onShare = { },
+            onShare = {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "Listen to ${currentSong.title} by ${currentSong.artist} on Musify!"
+                    )
+                }
+                runCatching { context.startActivity(Intent.createChooser(shareIntent, "Share via")) }
+            },
+            onShowQueue = {
+                showPlayer = false
+                profileRoute = ProfileRoute.QUEUE
+            },
             onViewArtist = {
                 viewModel.searchArtist(currentSong.artist.split(",").first().trim())
                 selectedTab = NavTab.SEARCH
                 showPlayer = false
-            }
+            },
+            downloadStatus = downloadStatus,
+            onSetSpeed = { viewModel.setPlaybackSpeed(it) },
+            currentSpeed = playbackState.playbackSpeed
         )
         return
     }
 
+    // Settings screen
+    if (showSettings) {
+        BackHandler(enabled = true) { showSettings = false }
+        SettingsScreen(
+            audioQuality = audioQuality,
+            onAudioQualityChange = { viewModel.setAudioQuality(it) },
+            selectedLanguages = selectedLanguages,
+            onLanguagesChange = { viewModel.setLanguages(it) },
+            downloadCount = downloads.size,
+            onClearDownloads = { viewModel.clearAllDownloads() },
+            appVersion = "1.0",
+            onBack = { showSettings = false }
+        )
+        return
+    }
+
+    // Profile sub-screens (Liked / Downloads / History / Queue)
+    if (profileRoute != null) {
+        BackHandler(enabled = true) { profileRoute = null }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (profileRoute) {
+                ProfileRoute.LIKED -> LikedSongsScreen(
+                    songs = likedSongs,
+                    onSongClick = { viewModel.playFrom(likedSongs, it, refresh = true) },
+                    onDownloadToggle = { selectedSongForOptions = it },
+                    onPlayAll = { viewModel.playAll(likedSongs) },
+                    onShufflePlay = { viewModel.playAll(likedSongs, shuffle = true) },
+                    currentPlayingSongId = currentSong?.id
+                )
+                ProfileRoute.DOWNLOADS -> DownloadsScreen(
+                    songs = downloads,
+                    onSongClick = { viewModel.playFrom(downloads, it) },
+                    onDeleteSong = { viewModel.removeSong(it) },
+                    onPlayAll = { if (downloads.isNotEmpty()) viewModel.playFrom(downloads, downloads.first()) },
+                    onShufflePlay = { viewModel.playAll(downloads, shuffle = true) },
+                    currentPlayingSongId = currentSong?.id
+                )
+                ProfileRoute.HISTORY -> HistoryScreen(
+                    songs = recentlyPlayed,
+                    onBack = { profileRoute = null },
+                    onSongClick = { viewModel.playFrom(recentlyPlayed, it, refresh = true) },
+                    currentPlayingSongId = currentSong?.id
+                )
+                ProfileRoute.QUEUE -> QueueScreen(
+                    songs = playbackState.queue,
+                    currentIndex = playbackState.currentIndex,
+                    onBack = { profileRoute = null },
+                    onSongClick = { song ->
+                        val idx = playbackState.queue.indexOfFirst { it.id == song.id }
+                        if (idx >= 0) viewModel.playerController.playQueue(playbackState.queue, idx)
+                    }
+                )
+                null -> {}
+            }
+
+            // Mini player so the user can see & control what's playing here too.
+            currentSong?.let { song ->
+                val progress = if (playbackState.durationMs > 0) {
+                    playbackState.positionMs.toFloat() / playbackState.durationMs.toFloat()
+                } else 0f
+                MiniPlayer(
+                    song = song,
+                    isPlaying = playbackState.isPlaying,
+                    onClick = { showPlayer = true },
+                    onPlayPause = { viewModel.playerController.togglePlayPause() },
+                    onNext = { viewModel.playerController.next() },
+                    progress = progress,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                )
+            }
+
+            // Download/remove notification shows on THIS screen too.
+            downloadStatus?.let { status ->
+                DownloadSnackbar(
+                    status = status,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = 8.dp)
+                )
+            }
+        }
+        return
+    }
+
     // Song options sheet
-    if (selectedSongForOptions != null && songForPlaylist == null) {
+    if (selectedSongForOptions != null) {
         val song = selectedSongForOptions!!
         SongOptionsSheet(
             song = song,
@@ -202,28 +322,6 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
             onViewArtist = {
                 viewModel.searchArtist(song.artist.split(",").first().trim())
                 selectedTab = NavTab.SEARCH
-            },
-            onAddToPlaylist = {
-                songForPlaylist = song
-                selectedSongForOptions = null
-            }
-        )
-    }
-
-    // Add to playlist sheet
-    if (songForPlaylist != null) {
-        val song = songForPlaylist!!
-        AddToPlaylistSheet(
-            song = song,
-            playlists = playlists,
-            onDismiss = { songForPlaylist = null },
-            onAddToPlaylist = { playlistId ->
-                viewModel.addSongToPlaylist(playlistId, song)
-                songForPlaylist = null
-            },
-            onCreatePlaylistAndAdd = { name ->
-                viewModel.createPlaylistAndAddSong(name, song)
-                songForPlaylist = null
             }
         )
     }
@@ -245,7 +343,16 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                         progress = progress
                     )
                 }
-                BottomNav(selected = selectedTab, onSelect = { selectedTab = it })
+                BottomNav(
+                    selected = selectedTab,
+                    onSelect = { newTab ->
+                        // Leaving Search resets it so re-opening starts fresh.
+                        if (selectedTab == NavTab.SEARCH && newTab != NavTab.SEARCH) {
+                            viewModel.clearSearch()
+                        }
+                        selectedTab = newTab
+                    }
+                )
             }
         }
     ) { padding ->
@@ -259,44 +366,60 @@ private fun SwardhunApp(viewModel: MusicViewModel) {
                 NavTab.HOME -> HomeScreen(
                     songs = home,
                     isLoading = isLoadingHome,
-                    onSongClick = { viewModel.playFrom(home, it) },
-                    onDownloadToggle = { selectedSongForOptions = it },
+                    onSongClick = { song ->
+                        if (home.any { it.id == song.id }) viewModel.playFrom(home, song)
+                        else viewModel.playFrom(recentlyPlayed, song, refresh = true)
+                    },
+                    onOptionsClick = { selectedSongForOptions = it },
+                    onLike = { viewModel.toggleLike(it) },
+                    likedIds = likedIds,
                     currentPlayingSongId = currentSong?.id,
                     recentlyPlayed = recentlyPlayed,
-                    onDownloadClick = { viewModel.toggleDownload(it) },
+                    userName = userProfile.name,
                     userPhotoUri = userProfile.photoUri,
-                    onProfileClick = { selectedTab = NavTab.PROFILE }
+                    onProfileClick = { selectedTab = NavTab.PROFILE },
+                    categorySongs = categorySongs,
+                    loadingCategory = loadingCategory,
+                    onChipSelected = { viewModel.loadCategory(it) }
                 )
                 NavTab.SEARCH -> SearchScreen(
                     query = searchQuery,
                     results = searchResults,
                     isSearching = isSearching,
+                    trending = trending,
+                    categories = categories,
                     onQueryChange = { viewModel.onSearchQueryChange(it) },
                     onSongClick = { viewModel.playFrom(searchResults, it) },
                     onDownloadToggle = { selectedSongForOptions = it },
                     currentPlayingSongId = currentSong?.id,
                     onDownloadClick = { viewModel.toggleDownload(it) }
                 )
-                NavTab.LIBRARY -> LibraryScreen(
-                    downloads = downloads,
-                    playlists = playlists,
-                    onSongClick = { viewModel.playFrom(downloads, it) },
-                    onDeleteSong = { viewModel.toggleDownload(it) },
-                    onPlayAll = { if (downloads.isNotEmpty()) viewModel.playFrom(downloads, downloads.first()) },
-                    onShufflePlay = {
-                        if (downloads.isNotEmpty()) {
-                            viewModel.playerController.playQueue(downloads, 0, shuffle = true)
-                        }
-                    },
-                    currentPlayingSongId = currentSong?.id,
-                    onCreatePlaylist = { viewModel.createPlaylist(it) },
-                    onPlaylistClick = { /* TODO: Open playlist detail */ },
-                    onDeletePlaylist = { viewModel.deletePlaylist(it) }
-                )
                 NavTab.PROFILE -> ProfileScreen(
                     profile = userProfile,
+                    likedCount = likedSongs.size,
+                    downloadCount = downloads.size,
+                    playedCount = recentlyPlayed.size,
+                    listeningMinutes = recentlyPlayed.sumOf { it.duration } / 60,
                     onNameChange = { viewModel.setUserName(it) },
-                    onPhotoChange = { viewModel.setUserPhoto(it) }
+                    onPhotoChange = { viewModel.setUserPhoto(it) },
+                    onOpenSettings = { showSettings = true },
+                    onOpenLiked = { profileRoute = ProfileRoute.LIKED },
+                    onOpenDownloads = { profileRoute = ProfileRoute.DOWNLOADS },
+                    onOpenHistory = { profileRoute = ProfileRoute.HISTORY },
+                    onOpenQueue = { profileRoute = ProfileRoute.QUEUE },
+                    onOpenEqualizer = { openSystemEqualizer(context) },
+                    onShareApp = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "🎵 Check out Musify - a free music streaming app!\n\n" +
+                                    "Download the latest version here:\n" +
+                                    "https://github.com/chaturvediaryan2024/Swardhun/releases/latest"
+                            )
+                        }
+                        runCatching { context.startActivity(Intent.createChooser(shareIntent, "Share Musify")) }
+                    }
                 )
             }
 
@@ -320,18 +443,21 @@ private fun DownloadSnackbar(
 ) {
     val bgColor = when {
         status.isFailed -> Color(0xFFef4444)
+        status.isRemoved -> Color(0xFFf97316) // Orange for removed
         status.isComplete -> Color(0xFF22c55e)
         else -> Color(0xFF3b82f6)
     }
 
     val icon = when {
         status.isFailed -> Icons.Rounded.Error
+        status.isRemoved -> Icons.Rounded.CheckCircle
         status.isComplete -> Icons.Rounded.CheckCircle
         else -> null
     }
 
     val text = when {
         status.isFailed -> "Download failed"
+        status.isRemoved -> "Removed"
         status.isComplete -> "Downloaded"
         else -> "Downloading..."
     }
@@ -374,5 +500,22 @@ private fun DownloadSnackbar(
                 maxLines = 1
             )
         }
+    }
+}
+
+enum class ProfileRoute { LIKED, DOWNLOADS, HISTORY, QUEUE }
+
+/** Opens the device's system equalizer for our audio session (music). */
+private fun openSystemEqualizer(context: Context) {
+    val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+        putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+    }
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        android.widget.Toast.makeText(
+            context, "No equalizer available on this device", android.widget.Toast.LENGTH_SHORT
+        ).show()
     }
 }

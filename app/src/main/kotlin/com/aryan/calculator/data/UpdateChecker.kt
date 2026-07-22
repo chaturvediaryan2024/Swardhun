@@ -19,7 +19,7 @@ data class AppUpdate(
 object UpdateChecker {
 
     private const val GITHUB_API_URL = "https://api.github.com/repos/chaturvediaryan2024/Swardhun/releases/latest"
-    private const val CURRENT_VERSION_CODE = 43
+    private const val CURRENT_VERSION_CODE = 44
 
     private val client = OkHttpClient()
 
